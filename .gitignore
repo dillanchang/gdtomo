@@ -1,0 +1,12 @@
+# Ignore the build and lib dirs
+build
+data
+lib/*/*
+
+# Ignore Mac specific files
+.DS_Store
+
+# Ignore Vim created files
+*~
+*.swp
+*.swo
