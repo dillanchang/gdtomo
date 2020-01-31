@@ -1,4 +1,3 @@
-
 function data = load_csv(filename)
   meta = fopen([filename,'_meta.txt'],'r');
   num_dim = fscanf(meta,'%d');
@@ -6,4 +5,3 @@ function data = load_csv(filename)
   data = readmatrix([filename,'.csv'])';
   data = reshape(data,shape);
 end
-

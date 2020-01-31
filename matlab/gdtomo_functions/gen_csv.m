@@ -1,4 +1,3 @@
-
 function gen_csv(data,filename)
   num_dim = size(size(data),2);
   d1 = size(data,1);
@@ -15,4 +14,3 @@ function gen_csv(data,filename)
   end
   fclose(meta);
 end
-
