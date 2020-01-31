@@ -1,6 +1,6 @@
 # Ignore the build and lib dirs
 build
-data
+matlab/data
 lib/*/*
 
 # Ignore Mac specific files
