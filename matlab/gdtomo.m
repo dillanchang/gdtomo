@@ -1,16 +1,16 @@
 % ==============================================
-% ===========  gdtomo driver  ==================
+% ===========  gdtomo recon driver  ============
 % ==============================================
 
 % === PARAMETERS ===============================
 GDTOMO_PATH = '/home/dillan/Projects/gdtomo/';
-projs_filename  = "./data/Pd/projs.mat" ;
-angles_filename = "./data/Pd/angles.mat";
-recon_filename  = "./data/Pd/recon.mat" ;
-err_filename    = "./data/Pd/err.mat"   ;
-num_iter        = 100;
+projs_filename  = "./data/multiple_tilt/projs.mat" ;
+angles_filename = "./data/multiple_tilt/angles.mat";
+recon_filename  = "./data/multiple_tilt/recon.mat" ;
+err_filename    = "./data/multiple_tilt/err.mat"   ;
+num_iter        = 50;
 recon_alpha     = 0.5;
-recon_dim       = [320,320,320];
+recon_dim       = [50,50,50];
 num_cores       = 6;
 % ==============================================
 

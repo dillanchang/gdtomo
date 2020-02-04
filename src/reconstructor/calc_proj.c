@@ -1,4 +1,4 @@
-#include <reconstructor/proj_calc.h>
+#include <reconstructor/calc_proj.h>
 
 #include <data/data_ops.h>
 #include <math.h>
@@ -80,4 +80,3 @@ void calc_projection(Data_3d* vol, double* angles, Data_2d* proj){
     }
   }
 }
-

@@ -1,21 +1,21 @@
 #include <reconstructor/calc_projs_diff.h>
 
-#include <reconstructor/proj_calc.h>
+#include <reconstructor/calc_proj.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <math.h>
 
-typedef struct calc_proj_obj{
+typedef struct calc_projs_obj{
   Data_3d* projs_diff;
   Data_3d* vol;
   Data_3d* projs;
   Data_2d* angles;
   unsigned int N_idxs;
   unsigned int* idxs;
-}calc_proj_obj;
+}calc_projs_obj;
 
-void init_calc_proj_objs(calc_proj_obj* objs, Data_3d* projs_diff, Data_3d* vol, Data_3d*
+void init_calc_projs_objs(calc_projs_obj* objs, Data_3d* projs_diff, Data_3d* vol, Data_3d*
   projs, Data_2d* angles, unsigned int num_cores){
   unsigned int s = (int)(ceil(1.*(projs->dim)[0]/num_cores));
   unsigned int low, high, n;
@@ -39,7 +39,7 @@ void init_calc_proj_objs(calc_proj_obj* objs, Data_3d* projs_diff, Data_3d* vol,
 }
 
 void *calc_projs_diff_helper(void *obj_ptr){
-  calc_proj_obj* obj = (calc_proj_obj *)obj_ptr;
+  calc_projs_obj* obj = (calc_projs_obj *)obj_ptr;
   Data_2d proj;
   unsigned int *proj_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
   proj_dim[0] = ((obj->projs)->dim)[1];
@@ -60,7 +60,7 @@ void *calc_projs_diff_helper(void *obj_ptr){
   return NULL;
 }
 
-void free_calc_proj_objs(calc_proj_obj* objs, unsigned int num_cores){
+void free_calc_projs_objs(calc_projs_obj* objs, unsigned int num_cores){
   for(unsigned int i=0; i<num_cores; i++){
     free(objs[i].idxs);
   }
@@ -71,8 +71,8 @@ void calc_projs_diff(Data_3d* projs_diff, Data_3d* vol, Data_3d* projs, Data_2d*
   if(num_cores > (projs_diff->dim)[0]){
     num_cores = (projs_diff->dim)[0];
   }
-  calc_proj_obj* objs = (calc_proj_obj *)malloc(num_cores*sizeof(calc_proj_obj));
-  init_calc_proj_objs(objs, projs_diff, vol, projs, angles, num_cores);
+  calc_projs_obj* objs = (calc_projs_obj *)malloc(num_cores*sizeof(calc_projs_obj));
+  init_calc_projs_objs(objs, projs_diff, vol, projs, angles, num_cores);
 
   pthread_t *threads = (pthread_t *)malloc(num_cores*sizeof(pthread_t)); 
   for(unsigned int i=0; i<num_cores; i++){
@@ -89,6 +89,6 @@ void calc_projs_diff(Data_3d* projs_diff, Data_3d* vol, Data_3d* projs, Data_2d*
     }
   }
 
-  free_calc_proj_objs(objs,num_cores);
+  free_calc_projs_objs(objs,num_cores);
   free(objs);
 }
