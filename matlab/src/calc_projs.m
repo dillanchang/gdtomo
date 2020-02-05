@@ -7,10 +7,6 @@ GDTOMO_PATH = '/home/dillan/Projects/gdtomo/';
 vol_filename    = "./data/test_calc_projs/vol.mat" ;
 angles_filename = "./data/test_calc_projs/angles.mat";
 projs_filename  = "./data/test_calc_projs/projs.mat" ;
-num_iter        = 50;
-recon_alpha     = 0.5;
-recon_dim       = [50,50,50];
-num_cores       = 6;
 % ==============================================
 
 time_str = ['t',datestr(now,'yyyymmddTHHMMSS')];

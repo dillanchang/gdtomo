@@ -1,0 +1,2 @@
+
+system('rm -r cache/*');

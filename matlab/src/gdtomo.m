@@ -14,7 +14,7 @@ recon_dim       = [50,50,50];
 num_cores       = 6;
 % ==============================================
 
-time_str = ['t',datestr(now,'yyyymmddTHHMMSS')];
+time_str = ['cache/t',datestr(now,'yyyymmddTHHMMSS')];
 projs    = importdata(projs_filename);
 angles   = importdata(angles_filename);
 params   = [num_iter, recon_alpha, recon_dim(1), recon_dim(2), recon_dim(3) ...
