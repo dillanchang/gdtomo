@@ -53,4 +53,3 @@ void rad_to_deg(Data_2d* a){
 int in_bounds(int i, int Ni){
   return (i>=0 && i<Ni);
 }
-

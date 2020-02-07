@@ -23,4 +23,3 @@ void calc_projs_err(Data_2d* err, Data_3d* projs_diff, Data_3d* projs){
     (err->data)[proj][1] = err_r2;
   }
 }
-

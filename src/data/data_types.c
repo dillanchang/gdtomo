@@ -39,4 +39,3 @@ void free_3d_data(Data_3d* d){
   free(d->data);
   free(d->dim);
 }
-

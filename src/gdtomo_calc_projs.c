@@ -1,7 +1,7 @@
 #include <data/data_types.h>
 #include <data/file_io.h>
 #include <data/data_ops.h>
-#include <reconstructor/calc_proj.h>
+#include <reconstructor/calc_projs.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -69,20 +69,7 @@ int run_gdtomo_calc_projs(const char* calc_projs_info_fn){
   projs_dim[2] = (vol.dim)[1];
   alloc_3d_data(&projs, projs_dim);
 
-  Data_2d proj;
-  unsigned int *proj_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
-  proj_dim[0] = (projs.dim)[1];
-  proj_dim[1] = (projs.dim)[2];
-  alloc_2d_data(&proj, proj_dim);
-  for(unsigned int idx=0; idx<(projs.dim)[0]; idx++){
-    calc_projection(&vol,(angles.data)[idx],&proj);
-    for(unsigned int x=0; x<(proj_dim)[0]; x++){
-      for(unsigned int y=0; y<(proj_dim)[1]; y++){
-        (projs.data)[idx][x][y] = (proj.data)[x][y];
-      }
-    }
-  }
-  free_2d_data(&proj);
+  calc_projections(&vol, &angles, &projs);
 
   export_3d_data(projs_fn, &projs);
 

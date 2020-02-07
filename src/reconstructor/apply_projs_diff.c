@@ -130,4 +130,3 @@ void apply_projs_diff(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   }
   free_apply_proj_objs(objs,num_cores);
 }
-

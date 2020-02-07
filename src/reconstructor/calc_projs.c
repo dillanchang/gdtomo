@@ -1,5 +1,6 @@
-#include <reconstructor/calc_proj.h>
+#include <reconstructor/calc_projs.h>
 
+#include <stdlib.h>
 #include <data/data_ops.h>
 #include <math.h>
 
@@ -47,7 +48,7 @@ double vol_val(double x, double y, double z, Data_3d* vol){
     q111*x_0*y_0*z_0;
 }
 
-void calc_projection(Data_3d* vol, double* angles, Data_2d* proj){
+void calc_one_projection(Data_3d* vol, double* angles, Data_2d* proj){
   int Nx_p    = (int)((proj->dim)[0]);
   int Ny_p    = (int)((proj->dim)[1]);
   int x_min   = -1*(int)((vol->dim)[0]/2);
@@ -79,4 +80,21 @@ void calc_projection(Data_3d* vol, double* angles, Data_2d* proj){
       }
     }
   }
+}
+
+void calc_projections(Data_3d* vol, Data_2d* angles, Data_3d* projs){
+  Data_2d proj;
+  unsigned int *proj_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
+  proj_dim[0] = (projs->dim)[1];
+  proj_dim[1] = (projs->dim)[2];
+  alloc_2d_data(&proj, proj_dim);
+  for(unsigned int idx=0; idx<(projs->dim)[0]; idx++){
+    calc_one_projection(vol,(angles->data)[idx],&proj);
+    for(unsigned int x=0; x<(proj_dim)[0]; x++){
+      for(unsigned int y=0; y<(proj_dim)[1]; y++){
+        (projs->data)[idx][x][y] = (proj.data)[x][y];
+      }
+    }
+  }
+  free_2d_data(&proj);
 }

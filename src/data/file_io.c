@@ -229,4 +229,3 @@ void export_3d_data(char* filename, Data_3d* d){
   fclose(meta_file);
   fclose(data_file);
 }
-

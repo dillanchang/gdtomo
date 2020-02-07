@@ -3,7 +3,7 @@
 % ==============================================
 
 % === PARAMETERS ===============================
-GDTOMO_PATH = '/home/dillan/Projects/gdtomo/';
+GDTOMO_PATH     = '/home/dillan/Projects/gdtomo/';
 projs_filename  = "./data/multiple_tilt/projs.mat" ;
 angles_filename = "./data/multiple_tilt/angles.mat";
 recon_filename  = "./data/multiple_tilt/recon.mat" ;
