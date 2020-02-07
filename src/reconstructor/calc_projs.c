@@ -82,7 +82,7 @@ void calc_one_projection(Data_3d* vol, double* angles, Data_2d* proj){
   }
 }
 
-void calc_projections(Data_3d* vol, Data_2d* angles, Data_3d* projs){
+void calc_projections(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   Data_2d proj;
   unsigned int *proj_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
   proj_dim[0] = (projs->dim)[1];

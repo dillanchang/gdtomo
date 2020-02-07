@@ -128,5 +128,7 @@ void apply_projs_diff(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
       exit(1);
     }
   }
+  free(threads);
   free_apply_proj_objs(objs,num_cores);
+  free(objs);
 }

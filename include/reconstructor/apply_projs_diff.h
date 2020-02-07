@@ -3,8 +3,11 @@
 
 #include <data/data_types.h>
 
-/* Applies the projection differences to [vol]. Last step for an iteration of
- * gdtomo. */
+/* 
+ * Applies the projection differences, [projs_diff], to [vol]. The projecion
+ * differences are aligned by Euler [angles], and the update scalar is defined
+ * by [alpha]. This step is the last step in an iteration of gdtomo.
+ */
 void apply_projs_diff(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
   double alpha, unsigned int num_cores);
 

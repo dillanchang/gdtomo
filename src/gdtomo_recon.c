@@ -107,8 +107,8 @@ int run_gdtomo_recon(const char* recon_info_fn){
 
   free(recon_fn);
   free(err_fn);
-  free_2d_data(&angles);
   free_3d_data(&projs);
+  free_2d_data(&angles);
   free_3d_data(&recon);
   free_3d_data(&err);
 

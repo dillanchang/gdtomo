@@ -69,7 +69,7 @@ int run_gdtomo_calc_projs(const char* calc_projs_info_fn){
   projs_dim[2] = (vol.dim)[1];
   alloc_3d_data(&projs, projs_dim);
 
-  calc_projections(&vol, &angles, &projs);
+  calc_projections(&projs, &vol, &angles);
 
   export_3d_data(projs_fn, &projs);
 

@@ -34,12 +34,6 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
   err_dim[2] = 2;
   alloc_3d_data(err, err_dim);
 
-  Data_2d err_iter;
-  unsigned int *err_iter_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
-  err_iter_dim[0] = (projs->dim)[0];
-  err_iter_dim[1] = 2;
-  alloc_2d_data(&err_iter, err_iter_dim);
-
   Data_3d projs_curr;
   unsigned int *projs_curr_dim = (unsigned int *)malloc(3*sizeof(unsigned int));
   projs_curr_dim[0] = (projs->dim)[0];
@@ -54,9 +48,15 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
   projs_diff_dim[2] = (projs->dim)[2];
   alloc_3d_data(&projs_diff, projs_diff_dim);
 
+  Data_2d err_iter;
+  unsigned int *err_iter_dim = (unsigned int *)malloc(2*sizeof(unsigned int));
+  err_iter_dim[0] = (projs->dim)[0];
+  err_iter_dim[1] = 2;
+  alloc_2d_data(&err_iter, err_iter_dim);
+
   double err_r1, err_r2;
   for(unsigned int iter=0; iter<(param->n_iter); iter++){
-    calc_projections(vol, angles, &projs_curr);
+    calc_projections(&projs_curr, vol, angles);
     calc_projs_diff(&projs_diff, projs, &projs_curr);
     calc_projs_err(&err_iter, &projs_diff, projs);
     apply_projs_diff(vol, &projs_diff, angles, param->alpha, param->num_cores);
@@ -71,10 +71,10 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
     err_r2 = err_r2/(projs->dim)[0];
     end = time(NULL);
     cpu_time_used = end-start;
-    printf("%s%d%s%f%s%f%s%d%s\n", "Iteration ", iter+1, ":\tR1 Error: ", err_r1,
-      ", R2 Error: ", err_r2, ", time elapsed: ", cpu_time_used, "s");
+    printf("%s%d%s%f%s%f%s%d%s\n", "Iteration ", iter+1, ":\tR1 Error: ",
+      err_r1, ", R2 Error: ", err_r2, ", time elapsed: ", cpu_time_used, "s");
   }
-  calc_projections(vol, angles, &projs_curr);
+  calc_projections(&projs_curr, vol, angles);
   calc_projs_diff(&projs_diff, projs, &projs_curr);
   calc_projs_err(&err_iter, &projs_diff, projs);
   err_r1 = 0; err_r2 = 0;
