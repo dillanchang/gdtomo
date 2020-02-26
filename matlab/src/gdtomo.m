@@ -1,9 +1,10 @@
+GDTOMO_PATH = '../'; % <-- modify this
+
 % ==============================================
 % ===========  gdtomo recon driver  ============
 % ==============================================
 
 % === PARAMETERS ===============================
-GDTOMO_PATH     = '/home/dillan/Projects/gdtomo/';
 projs_filename  = "./data/test_gdtomo/projs.mat" ;
 angles_filename = "./data/test_gdtomo/angles.mat";
 recon_filename  = "./data/test_gdtomo/recon.mat" ;

@@ -1,9 +1,10 @@
+GDTOMO_PATH = '../'; % <-- modify this
+
 % ==============================================
 % =======  gdtomo calc_projs driver  ===========
 % ==============================================
 
 % === PARAMETERS ===============================
-GDTOMO_PATH = '/home/dillan/Projects/gdtomo/';
 vol_filename    = "./data/test_calc_projs/vol.mat" ;
 angles_filename = "./data/test_calc_projs/angles.mat";
 projs_filename  = "./data/test_calc_projs/projs.mat" ;
