@@ -9,7 +9,7 @@ angles_filename = "./data/test_calc_projs/angles.mat";
 projs_filename  = "./data/test_calc_projs/projs.mat" ;
 % ==============================================
 
-time_str = ['t',datestr(now,'yyyymmddTHHMMSS')];
+time_str = ['cache/t',datestr(now,'yyyymmddTHHMMSS')];
 vol      = importdata(vol_filename);
 angles   = importdata(angles_filename);
 

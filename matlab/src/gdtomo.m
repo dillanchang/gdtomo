@@ -4,10 +4,10 @@
 
 % === PARAMETERS ===============================
 GDTOMO_PATH     = '/home/dillan/Projects/gdtomo/';
-projs_filename  = "./data/multiple_tilt/projs.mat" ;
-angles_filename = "./data/multiple_tilt/angles.mat";
-recon_filename  = "./data/multiple_tilt/recon.mat" ;
-err_filename    = "./data/multiple_tilt/err.mat"   ;
+projs_filename  = "./data/test_gdtomo/projs.mat" ;
+angles_filename = "./data/test_gdtomo/angles.mat";
+recon_filename  = "./data/test_gdtomo/recon.mat" ;
+err_filename    = "./data/test_gdtomo/err.mat"   ;
 num_iter        = 50;
 recon_alpha     = 0.5;
 recon_dim       = [50,50,50];

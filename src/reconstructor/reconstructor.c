@@ -56,7 +56,7 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
 
   double err_r1, err_r2;
   for(unsigned int iter=0; iter<(param->n_iter); iter++){
-    calc_projections(&projs_curr, vol, angles);
+    calc_projections(&projs_curr, vol, angles, param->num_cores);
     calc_projs_diff(&projs_diff, projs, &projs_curr);
     calc_projs_err(&err_iter, &projs_diff, projs);
     apply_projs_diff(vol, &projs_diff, angles, param->alpha, param->num_cores);
@@ -74,7 +74,7 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
     printf("%s%d%s%f%s%f%s%d%s\n", "Iteration ", iter+1, ":\tR1 Error: ",
       err_r1, ", R2 Error: ", err_r2, ", time elapsed: ", cpu_time_used, "s");
   }
-  calc_projections(&projs_curr, vol, angles);
+  calc_projections(&projs_curr, vol, angles, param->num_cores);
   calc_projs_diff(&projs_diff, projs, &projs_curr);
   calc_projs_err(&err_iter, &projs_diff, projs);
   err_r1 = 0; err_r2 = 0;

@@ -4,4 +4,3 @@
 int run_test();
 
 #endif
-
