@@ -1,7 +1,6 @@
 # Ignore the build and lib dirs
 build
-matlab/data
-lib/*/*
+data
 
 # Ignore Mac specific files
 .DS_Store

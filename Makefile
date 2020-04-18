@@ -36,6 +36,6 @@ edit:
 	vim ./src/*.c ./src/*/*.c ./include/*/*.h ./test/test.c
 
 clean:
-	-@rm -rvf $(OBJ_DIR)/*
+	-@rm -rvf $(OBJ_DIR)
 	-@rm $(TARGET)
 
