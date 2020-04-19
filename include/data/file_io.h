@@ -4,18 +4,14 @@
 #include <data/data_types.h>
 
 /*
-Allocates and imports a type double data set located at [filename]+".csv",
-with dimensions defined at [*dim].
-The imported data will be loaded at [*data].
+Allocates and imports an npy data set located at [filename]
 */
 void import_2d_data(char* filename, Data_2d* d);
 
 void import_3d_data(char* filename, Data_3d* d);
 
 /*
-Exports a double [data] set to [filename]+".csv",
-with metadata written to [filename]+"_meta.txt",
-with dimensions defined at [dim].
+Exports a dataset [d] to [filename] with npy file specifications
 */
 void export_2d_data(char* filename, Data_2d* d);
 
