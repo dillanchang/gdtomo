@@ -3,22 +3,23 @@
 
 int run_test()
 { 
-  char* angles_filename     = "./data/python/multiple_tilt/angles.npy";
-  char* proj_filename       = "./data/python/multiple_tilt/projs.npy";
-  char* angles_filename_new = "./data/python/multiple_tilt/angles_new.npy";
-  char* proj_filename_new   = "./data/python/multiple_tilt/projs_new.npy";
+  char* recon_filename      = "./analysis/20200426_Pd-proj/data/recon_dennis.npy";
+  char* angles_filename     = "./analysis/20200426_Pd-proj/data/angles.npy";
+  char* projs_in_filename   = "./analysis/20200426_Pd-proj/data/projs.npy";
+
+  Data_3d recon;
+  import_3d_data(recon_filename, &recon);
 
   Data_2d angles;
   import_2d_data(angles_filename, &angles);
 
-  Data_3d projs;
-  import_3d_data(proj_filename, &projs);
+  Data_3d projs_in;
+  import_3d_data(projs_in_filename, &projs_in);
 
-  export_2d_data(angles_filename_new, &angles);
-  export_3d_data(proj_filename_new, &projs);
-
+  free_3d_data(&recon);
   free_2d_data(&angles);
-  free_3d_data(&projs);
+  free_3d_data(&projs_in);
 
   return 0;
 }
+

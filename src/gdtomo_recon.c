@@ -15,113 +15,81 @@ void read_recon_info(const char* recon_info_fn, Data_3d* projs, Data_2d* angles,
   size_t len = 0;
   int ll = 0;
 
+  // Opening File
   recon_info = fopen(recon_info_fn, "r");
   if(recon_info == NULL){
     exit(EXIT_FAILURE);
   }
   getline(&line, &len, recon_info);
   
+  // Projection path
   ll = getline(&line, &len, recon_info);
-  if(ll != -1){
-    line[ll-1] = '\0';
-    import_3d_data(line, projs);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  line[ll-1] = '\0';
+  import_3d_data(line, projs);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
+  // Angles path
   ll = getline(&line, &len, recon_info);
-  if(ll != -1){
-    line[ll-1] = '\0';
-    import_2d_data(line, angles);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  line[ll-1] = '\0';
+  import_2d_data(line, angles);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
+  // Recon path
   ll = getline(&line, &len, recon_info);
-  if(ll != -1){
-    line[ll-1] = '\0';
-    *recon_fn = (char *)malloc(ll*sizeof(char));
-    strcpy(*recon_fn,line);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  line[ll-1] = '\0';
+  *recon_fn = (char *)malloc(ll*sizeof(char));
+  strcpy(*recon_fn,line);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
+  // Err path
   ll = getline(&line, &len, recon_info);
-  if(ll != -1){
-    line[ll-1] = '\0';
-    *err_fn = (char *)malloc(ll*sizeof(char));
-    strcpy(*err_fn,line);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  line[ll-1] = '\0';
+  *err_fn = (char *)malloc(ll*sizeof(char));
+  strcpy(*err_fn,line);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
   char* ptr;
-  if(getline(&line, &len, recon_info)!= -1){
-    param->n_iter = strtol(line, &ptr, 10);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // N_iter
+  getline(&line, &len, recon_info);
+  param->n_iter = strtol(line, &ptr, 10);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
-  if(getline(&line, &len, recon_info)!= -1){
-    param->alpha = strtod(line, &ptr);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // Alpha
+  getline(&line, &len, recon_info);
+  param->alpha = strtod(line, &ptr);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
   param->recon_dim = malloc(sizeof(unsigned int)*3);
 
-  if(getline(&line, &len, recon_info)!= -1){
-    (param->recon_dim)[0] = strtol(line, &ptr, 10);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // Dim x
+  getline(&line, &len, recon_info);
+  (param->recon_dim)[0] = strtol(line, &ptr, 10);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
-  if(getline(&line, &len, recon_info)!= -1){
-    (param->recon_dim)[1] = strtol(line, &ptr, 10);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // Dim y
+  getline(&line, &len, recon_info);
+  (param->recon_dim)[1] = strtol(line, &ptr, 10);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
-  if(getline(&line, &len, recon_info)!= -1){
-    (param->recon_dim)[2] = strtol(line, &ptr, 10);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // Dim z
+  getline(&line, &len, recon_info);
+  (param->recon_dim)[2] = strtol(line, &ptr, 10);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
-  if(getline(&line, &len, recon_info)!= -1){
-    param->num_cores = strtol(line, &ptr, 10);
-  }
-  else{
-    exit(EXIT_FAILURE);
-  }
+  // Num cores
+  getline(&line, &len, recon_info);
+  param->num_cores = strtol(line, &ptr, 10);
 
+  // Close file
   fclose(recon_info);
 }
 
@@ -154,3 +122,4 @@ int run_gdtomo_recon(const char* recon_info_fn){
 
   return 0;
 }
+

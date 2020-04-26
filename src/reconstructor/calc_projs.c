@@ -141,7 +141,7 @@ void free_calc_proj_objs(calc_proj_obj* objs, unsigned int num_cores){
   }
 }
 
-void calc_projections(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
+void calc_projs(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
   if(num_cores > (projs->dim)[0]){
     num_cores = (projs->dim)[0];
   }
@@ -165,3 +165,4 @@ void calc_projections(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned in
   free_calc_proj_objs(objs,num_cores);
   free(objs);
 }
+

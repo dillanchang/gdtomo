@@ -212,7 +212,7 @@ void import_3d_data(char* filename, Data_3d* d){
   FILE * file;
   file = fopen(filename, "r");
   if(file==NULL){
-    printf("%s\n","ERROR: Cannot open 2d data file");
+    printf("%s\n","ERROR: Cannot open 3d data file");
     exit(1);
   }
   read_3d_metadata(file, d);
@@ -299,7 +299,7 @@ void export_3d_data(char* filename, Data_3d* d){
 
   file = fopen(filename,"w");
   if(file==NULL){
-    printf("%s\n","ERROR: Cannot open 2d data file to export");
+    printf("%s\n","ERROR: Cannot open 3d data file to export");
     exit(1);
   }
 

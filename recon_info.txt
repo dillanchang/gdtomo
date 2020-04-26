@@ -1,14 +1,14 @@
 [projections_filename]
-./data/python/multiple_tilt/projs.npy
+./analysis/20200426_Pd-proj/data/projs.npy
 
 [angles_filename]
-./data/python/multiple_tilt/angles.npy
+./analysis/20200426_Pd-proj/data/angles.npy
 
 [recon_filename]
-./data/python/multiple_tilt/recon.npy
+./analysis/20200426_Pd-proj/data/recon.npy
 
 [err_filename]
-./data/python/multiple_tilt/err.npy
+./analysis/20200426_Pd-proj/data/err.npy
 
 [n_iter]
 100
@@ -17,17 +17,14 @@
 1.0
 
 [recon_dim_x]
-50
+320
 
 [recon_dim_y]
-50
+320
 
 [recon_dim_z]
-50
-
-[recon_dim_z]
-50
+320
 
 [max_num_cores]
-4
+6
 

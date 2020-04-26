@@ -1,6 +1,6 @@
 # Ignore the build and lib dirs
 build
-data
+analysis
 
 # Ignore Mac specific files
 .DS_Store
