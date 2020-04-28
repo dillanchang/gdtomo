@@ -107,7 +107,7 @@ void free_apply_proj_objs(apply_proj_obj* objs, unsigned int num_cores){
   }
 }
 
-void apply_projs_diff(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
+void apply_projs_diff_0(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
   double alpha, unsigned int num_cores){
   if(num_cores > (vol->dim)[2]){
     num_cores = (vol->dim)[2];

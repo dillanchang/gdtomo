@@ -7,6 +7,8 @@
  * Calculates [proj]ection[s] of [vol]ume from viewing from orientation defined
  * by Euler [angles].
  */
-void calc_projs(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores);
+void calc_projs_0(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores);
+
+void calc_projs_1(Data_3d* projs, Data_3d* vol, Data_2d* angles);
 
 #endif

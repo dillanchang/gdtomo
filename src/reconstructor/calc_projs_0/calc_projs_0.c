@@ -56,7 +56,9 @@ void calc_one_projection(Data_3d* vol, double* angles, Data_2d* proj){
   int x_min   = -1*(int)((vol->dim)[0]/2);
   int y_min   = -1*(int)((vol->dim)[1]/2);
   int z_min   = -1*(int)((vol->dim)[2]/2);
-  int z_max_p = (int)ceil(sqrt(((double)x_min*x_min+(double)y_min*y_min+(double)z_min*z_min)));
+  int z_max_p = (int)ceil(sqrt( (double)x_min*x_min
+                              + (double)y_min*y_min
+                              + (double)z_min*z_min ));
   int z_min_p = -1*z_max_p;
 
   double x_hat_i[3] = {1,0,0}; double x_hat[3];
@@ -141,7 +143,7 @@ void free_calc_proj_objs(calc_proj_obj* objs, unsigned int num_cores){
   }
 }
 
-void calc_projs(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
+void calc_projs_0(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
   if(num_cores > (projs->dim)[0]){
     num_cores = (projs->dim)[0];
   }
