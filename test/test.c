@@ -30,8 +30,12 @@ int run_test()
   projs_1_dim[2] = (recon.dim)[1];
   alloc_3d_data(&projs_1, projs_1_dim);
 
-  calc_projs_0(&projs_0, &recon, &angles, 4);
+
+  printf("%s\n", "starting projection calculation");
+  // calc_projs_0(&projs_0, &recon, &angles, 6);
+  // printf("%s\n", "calc_projs_0 complete");
   calc_projs_1(&projs_1, &recon, &angles);
+  printf("%s\n", "calc_projs_1 complete");
 
   export_3d_data("./analysis/20200427_calc_proj_1/data/projs_0.npy", &projs_0);
   export_3d_data("./analysis/20200427_calc_proj_1/data/projs_1.npy", &projs_1);

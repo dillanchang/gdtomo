@@ -12,6 +12,7 @@ SRC_C       :=                 \
    $(wildcard test/*.c)        \
 
 SRC_CU      :=                 \
+   $(wildcard src/*/*/*.cu)      \
    $(wildcard src/*/*.cu)      \
    $(wildcard src/*.cu)        \
    $(wildcard test/*.cu)       \

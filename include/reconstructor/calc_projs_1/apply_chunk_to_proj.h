@@ -6,8 +6,8 @@
 /* 
  * 
  */
-void apply_chunk_to_proj(double*** chunk, unsigned int dim_chunk, double*
-  chunk_origin, double*** projs, double*** r_hats, unsigned int num_projs,
+void apply_chunk_to_proj(double* chunk, unsigned int dim_chunk,
+  double* chunk_origin, double* projs, double* r_hats, unsigned int num_projs,
   unsigned int dim_proj_x, unsigned int dim_proj_y, unsigned int lim_proj_z);
 
 #endif

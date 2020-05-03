@@ -23,7 +23,7 @@ double chunk_val(int x, int y, int z, unsigned int x_lim,
   return vol[x_idx][y_idx][z_idx];
 }
 
-int get_chunk(Data_3d* vol, unsigned int chunk_idx, double*** chunk,
+int get_chunk(Data_3d* vol, unsigned int chunk_idx, double* chunk,
   unsigned int dim_chunk, double* chunk_origin){
 
   int curr_x = -2, curr_y = -2, curr_z = -2;
@@ -67,11 +67,13 @@ int get_chunk(Data_3d* vol, unsigned int chunk_idx, double*** chunk,
   chunk_origin[1] = (double)(y_min+curr_y);
   chunk_origin[2] = (double)(z_min+curr_z);
 
-  for(int x = 0; x < (int)dim_chunk; x++){
+  for(int z = 0; z < (int)dim_chunk; z++){
     for(int y = 0; y < (int)dim_chunk; y++){
-      for(int z = 0; z < (int)dim_chunk; z++){
-        chunk[x][y][z] = chunk_val(curr_x+x,curr_y+y,curr_z+z,
-          dim_x,dim_y,dim_z,(vol->data));
+      for(int x = 0; x < (int)dim_chunk; x++){
+        chunk[z*dim_chunk*dim_chunk+y*dim_chunk+x] =
+          chunk_val(
+            curr_x+x,curr_y+y,curr_z+z,dim_x,dim_y,dim_z,(vol->data)
+          );
       }
     }
   }
