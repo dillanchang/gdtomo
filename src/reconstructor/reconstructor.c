@@ -1,6 +1,7 @@
 #include <reconstructor/reconstructor.h>
 
-#include <reconstructor/calc_projs.h>
+#include <reconstructor/calc_projs_0/calc_projs_0.h>
+#include <reconstructor/calc_projs_1/calc_projs_1.h>
 #include <reconstructor/calc_projs_diff.h>
 #include <reconstructor/calc_projs_err.h>
 #include <reconstructor/apply_projs_diff.h>

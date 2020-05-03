@@ -5,7 +5,8 @@
 #include <data/data_types.h>
 #include <data/file_io.h>
 #include <data/data_ops.h>
-#include <reconstructor/calc_projs.h>
+#include <reconstructor/calc_projs_0/calc_projs_0.h>
+#include <reconstructor/calc_projs_1/calc_projs_1.h>
 
 int run_test()
 {

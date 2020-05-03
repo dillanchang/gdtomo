@@ -1,4 +1,4 @@
-#include <reconstructor/calc_projs.h>
+#include <reconstructor/calc_projs_0/calc_projs_0.h>
 
 #include <data/data_ops.h>
 #include <stdlib.h>

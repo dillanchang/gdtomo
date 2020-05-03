@@ -1,82 +1,78 @@
-#include <reconstructor/calc_projs.h>
+#include <reconstructor/calc_projs_1/calc_projs_1.h>
+#include <reconstructor/calc_projs_1/get_chunk.h>
+#include <reconstructor/calc_projs_1/apply_chunk_to_proj.h>
 
+#include <data/data_ops.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 
-#define DIM_CHUNK 15
-#define PI 3.14159265
-
-unsigned int get_num_chunks(Data_3d* vol){
-  vol = vol;
-  return 0;
-}
-
-void get_chunk(Data_3d* vol, unsigned int chunk_id, Data_3d* chunk,
-  double* chunk_origin){
-  vol = vol;
-  chunk_id = chunk_id;
-  chunk = chunk;
-  chunk_origin = chunk_origin;
-}
-
-void get_query_pts(Data_3d* chunk, double* chunk_origin, Data_2d* angles,
-  int** query_pts, unsigned int num_query_pts){
-  chunk = chunk;
-  chunk_origin = chunk_origin; 
-  angles = angles;
-  query_pts = query_pts;
-  num_query_pts = num_query_pts;
-}
-
-void apply_query_pts(Data_3d* chunk, double* chunk_origin, Data_2d* angles,
-  int** query_pts, Data_3d* projs){
-  chunk = chunk;
-  chunk_origin = chunk_origin; 
-  angles = angles;
-  query_pts = query_pts;
-  projs = projs;
-}
-
-void clear_query_pts(int** query_pts, unsigned int num_query_pts){
-  query_pts = query_pts;
-  num_query_pts = num_query_pts;
-}
-
 void calc_projs_1(Data_3d* projs, Data_3d* vol, Data_2d* angles){
-
-  Data_3d chunk;
-  unsigned int num_chunks = get_num_chunks(vol);
-  unsigned int *chunk_dim = (unsigned int *)malloc(3*sizeof(unsigned int));
-  chunk_dim[0] = DIM_CHUNK;
-  chunk_dim[1] = DIM_CHUNK;
-  chunk_dim[2] = DIM_CHUNK;
-  alloc_3d_data(&chunk, chunk_dim);
-
+  unsigned int dim_chunk = 25;
+  double*** chunk;
+  chunk = (double***)malloc(dim_chunk*sizeof(double**));
+  for(unsigned int i=0; i<dim_chunk; i++){
+    chunk[i] = (double**)malloc(dim_chunk*sizeof(double*));
+    for(unsigned int j=0; j<dim_chunk; j++){
+      chunk[i][j] = (double*)malloc(dim_chunk*sizeof(double));
+    }
+  }
   double *chunk_origin = (double *)malloc(3*sizeof(double));
-  double chunk_radius  = 1.73205*DIM_CHUNK/2.+5.;
-  unsigned int num_query_pts = ceil(
-                                (angles->dim)[0]*PI*chunk_radius*chunk_radius
-                               );
-  int **query_pts = (int **)malloc(num_query_pts*sizeof(int *));
-  for(unsigned int pt_idx=0; pt_idx<num_query_pts; pt_idx++){
-    query_pts[pt_idx] = (int *)malloc(5*sizeof(int));
-  }
-  clear_query_pts(query_pts, num_query_pts);
 
-  for(unsigned int chunk_id=0; chunk_id<num_chunks; chunk_id++){
-    get_chunk(vol, chunk_id, &chunk, chunk_origin);
-    get_query_pts(&chunk, chunk_origin, angles, query_pts, num_query_pts);
-    apply_query_pts(&chunk, chunk_origin, angles, query_pts, projs);
-    clear_query_pts(query_pts, num_query_pts);
+  double x_hat_i[3] = {1,0,0};
+  double y_hat_i[3] = {0,1,0};
+  double z_hat_i[3] = {0,0,1};
+  double*** r_hats = (double ***)malloc((projs->dim)[0]*sizeof(double **));
+  for(unsigned int proj_i = 0; proj_i < (projs->dim)[0]; proj_i++){
+    r_hats[proj_i] = (double **)malloc(3*sizeof(double *));
+    for(unsigned int i = 0; i < 3; i++){
+      r_hats[proj_i][i] = (double *)malloc(3*sizeof(double));
+    }
+    euler_rot_rev(x_hat_i,(angles->data)[proj_i],r_hats[proj_i][0]);
+    euler_rot_rev(y_hat_i,(angles->data)[proj_i],r_hats[proj_i][1]);
+    euler_rot_rev(z_hat_i,(angles->data)[proj_i],r_hats[proj_i][2]);
   }
 
-  free_3d_data(&chunk);
+  for(unsigned int proj_idx=0; proj_idx<(projs->dim)[0]; proj_idx++){
+    for(unsigned int proj_x=0; proj_x<(projs->dim)[1]; proj_x++){
+      for(unsigned int proj_y=0; proj_y<(projs->dim)[2]; proj_y++){
+        (projs->data)[proj_idx][proj_x][proj_y] = 0.;
+      }
+    }
+  }
+
+  double x_min  = 1.0*(vol->dim)[0]/2;
+  double y_min  = 1.0*(vol->dim)[1]/2;
+  double z_min  = 1.0*(vol->dim)[2]/2;
+  unsigned int lim_proj_z =
+    (unsigned int) ceil(sqrt( (double)x_min*x_min
+                            + (double)y_min*y_min
+                            + (double)z_min*z_min ));
+
+  unsigned int chunk_idx = 0;
+  int finished = get_chunk(vol, chunk_idx, chunk, dim_chunk, chunk_origin);
+  while(!finished){
+    apply_chunk_to_proj(chunk, dim_chunk, chunk_origin, projs->data,
+      r_hats, (projs->dim)[0], (projs->dim)[1], (projs->dim)[2], lim_proj_z);
+    chunk_idx++;
+    finished = get_chunk(vol, chunk_idx, chunk, dim_chunk, chunk_origin);
+  }
+
+  for(unsigned int i=0; i<dim_chunk; i++){
+    for(unsigned int j=0; j<dim_chunk; j++){
+      free(chunk[i][j]);
+    }
+    free(chunk[i]);
+  }
+  free(chunk);
   free(chunk_origin);
-  for(unsigned int pt_idx=0; pt_idx<num_query_pts; pt_idx++){
-    free(query_pts[pt_idx]);
+
+  for(unsigned int proj_i = 0; proj_i < (projs->dim)[0]; proj_i++){
+    for(unsigned int i = 0; i < 3; i++){
+      free(r_hats[proj_i][i]);
+    }
+    free(r_hats[proj_i]);
   }
-  free(query_pts);
+  free(r_hats);
 
 }
 
