@@ -85,10 +85,6 @@ void read_recon_info(const char* recon_info_fn, Data_3d* projs, Data_2d* angles,
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
-  // Num cores
-  getline(&line, &len, recon_info);
-  param->num_cores = strtol(line, &ptr, 10);
-
   // Close file
   fclose(recon_info);
 }

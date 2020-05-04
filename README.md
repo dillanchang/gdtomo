@@ -1,14 +1,15 @@
 # gdtomo
-gdtomo is a gradient-descent based tomographic algorithm written in C to
-minimize memory footprint and optimized with parallelization.
+gdtomo is a gradient-descent based tomographic algorithm written in C with cuda to minimize memory footprint and optimize with GPU parallelization.
 
 ## Installation
-In the main directory, invoke
+In the main directory, call
 ```bash
 make
 ```
-to build gdtomo in C. The current version is tested with gcc 7.4.0 in Ubuntu
-7.4.0-1ubuntu1~18.04.1.
+to build gdtomo in C. The current version is tested with
+  - gcc 7.4.0
+  - x86_64 Linux 5.6.8-arch1-1
+  - nvcc 10.2
 
 Invoke
 ```bash
@@ -17,44 +18,56 @@ make clean
 to clean the current build of gdtomo.
 
 ## Usage
-A wrapper is written in MATLAB found in the ``matlab`` directory. To use
-gdtomo, make sure to update Line 1 of ``gdtomo.m`` or ``calc_projs.m`` with
-the correct path to gdtomo.
-```matlab
-GDTOMO_PATH = '../'; % <-- modify this
+Call
+```bash
+./gdtomo recon recon_info.txt
 ```
-By doing so, you'll be able to call gdtomo even though the matlab files exist
-in another directory.
+to perform tomography. A sample of ```recon_info.txt``` is shown below.
+
+```
+[projections_filename]
+./example/projs.npy
+
+[angles_filename]
+./example/angles.npy
+
+[recon_filename]
+./example/recon.npy
+
+[err_filename]
+./example/err.npy
+
+[n_iter]
+200
+
+[alpha]
+1.0
+
+[recon_dim_x]
+50
+
+[recon_dim_y]
+50
+
+[recon_dim_z]
+50
+
+```
 
 ## Parameters
-The parameters of the reconstruction can be modified in the first few lines of gdtomo.m:
-```matlab
-% === PARAMETERS ===============================
-projs_filename  = "./data/test_gdtomo/projs.mat" ;
-angles_filename = "./data/test_gdtomo/angles.mat";
-recon_filename  = "./data/test_gdtomo/recon.mat" ;
-err_filename    = "./data/test_gdtomo/err.mat"   ;
-num_iter        = 50;
-recon_alpha     = 0.5;
-recon_dim       = [50,50,50];
-num_cores       = 6;
-% ==============================================
-```
 
 Let *N* be the number of projections, *D1* and *D2* be the projection dimensions.
 
-``projs_filename`` points to a 3-dimensional dataset with dimensions
-[*N*,*D1*,*D2*]. The projections are centered so that the rotational center
-is located at [(*D1*+1)/2,(*D2*+1)/2].
+``projections_filename`` points to a 3-dimensional projections dataset with dimensions [*N*,*D1*,*D2*]. The projections are centered so that the rotational center is located at [(*D1*+1)/2,(*D2*+1)/2]. The file should be a 3D matrix in ```.npy``` format.
 
-``angles_filename`` points to a 2-dimensional dataset with dimensions [*N*,3]. These are euler angles of the projection rotations in degrees.
+``angles_filename`` points to a 2-dimensional angle dataset with dimensions [*N*,3]. These are euler angles (Z-Y-X convention, with Z being the first rotation) of the projection rotations in degrees. The file should be a 2D matrix in ```.npy``` format.
 
-``recon_filename`` is where the final reconstruction will be saved.
+``recon_filename`` is where the final reconstruction will be saved in ```.npy``` format.
 
-``err_filename`` is where the L1 and L2 norms of the errors are saved.
+``err_filename`` is where the L1 and L2 norms of the errors will be saved in ```.npy``` format.
 
-``recon_alpha`` is the rate of gradient descent in the algorithm. Increasing this value will increase speed of reconstruction.
+``n_iter`` is the number of iterations.
 
-``recon_dim`` are the dimensions of the final reconstruction.
+``alpha`` is the rate of gradient descent. Increasing this value will increase speed of reconstruction.
 
-``num_cores`` sets the number of CPU cores you want to utilize during reconstruction.
+``recon_dim_*`` are the dimensions of the final reconstruction.
