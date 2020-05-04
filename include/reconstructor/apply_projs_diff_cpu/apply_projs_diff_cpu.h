@@ -1,5 +1,5 @@
-#ifndef APPLY_PROJS_DIFF_H
-#define APPLY_PROJS_DIFF_H
+#ifndef APPLY_PROJS_DIFF_CPU_H
+#define APPLY_PROJS_DIFF_CPU_H
 
 #include <data/data_types.h>
 
@@ -8,7 +8,7 @@
  * differences are aligned by Euler [angles], and the update scalar is defined
  * by [alpha]. This step is the last step in an iteration of gdtomo.
  */
-void apply_projs_diff_0(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
+void apply_projs_diff_cpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
   double alpha, unsigned int num_cores);
 
 #endif

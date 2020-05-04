@@ -1,9 +1,8 @@
 extern "C"{
-  #include <reconstructor/calc_projs_1/apply_chunk_to_proj.h>
+  #include <reconstructor/calc_projs_gpu/apply_chunk_to_proj.h>
 
   #include <data/data_ops.h>
   #include <math.h>
-  #include <stdio.h>
 }
 
 #define BLOCK_COUNT 512
@@ -84,47 +83,13 @@ __global__ void get_proj_val(double* chunk, unsigned int dim_chunk,
   }
 }
 
-void apply_chunk_to_proj(double* chunk, unsigned int dim_chunk,
-  double* chunk_origin, double* projs, double* r_hats,
+void apply_chunk_to_proj(double* dev_chunk, unsigned int dim_chunk,
+  double* dev_chunk_origin, double* dev_projs, double* dev_r_hats,
   unsigned int num_projs, unsigned int pdx, unsigned int pdy,
   unsigned int lim_proj_z){
 
-  double *dev_chunk, *dev_chunk_origin, *dev_projs, *dev_r_hats;
-
-  cudaMalloc( (void**)&dev_chunk, dim_chunk*dim_chunk*dim_chunk*sizeof(double));
-  cudaMalloc( (void**)&dev_chunk_origin, 3*sizeof(double));
-  cudaMalloc( (void**)&dev_projs, num_projs*pdx*pdy*sizeof(double));
-  cudaMalloc( (void**)&dev_r_hats, num_projs*3*3*sizeof(double));
-
-  cudaMemcpy( dev_chunk, 
-              chunk,
-              dim_chunk*dim_chunk*dim_chunk*sizeof(double),
-              cudaMemcpyHostToDevice );
-  cudaMemcpy( dev_chunk_origin, 
-              chunk_origin,
-              3*sizeof(double),
-              cudaMemcpyHostToDevice );
-  cudaMemcpy( dev_projs, 
-              projs,
-              num_projs*pdx*pdy*sizeof(double),
-              cudaMemcpyHostToDevice );
-  cudaMemcpy( dev_r_hats, 
-              r_hats,
-              num_projs*3*3*sizeof(double),
-              cudaMemcpyHostToDevice );
-
   get_proj_val<<<BLOCK_COUNT,THREAD_COUNT>>>(dev_chunk, dim_chunk,
     dev_chunk_origin, dev_projs, dev_r_hats, num_projs, pdx, pdy, lim_proj_z);
-
-  cudaMemcpy( projs, 
-              dev_projs,
-              num_projs*pdx*pdy*sizeof(double),
-              cudaMemcpyDeviceToHost );
-
-  cudaFree( dev_chunk        );
-  cudaFree( dev_chunk_origin );
-  cudaFree( dev_projs        );
-  cudaFree( dev_r_hats       );
 
 }
 

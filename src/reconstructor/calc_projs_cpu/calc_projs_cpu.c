@@ -1,4 +1,4 @@
-#include <reconstructor/calc_projs_0/calc_projs_0.h>
+#include <reconstructor/calc_projs_cpu/calc_projs_cpu.h>
 
 #include <data/data_ops.h>
 #include <stdlib.h>
@@ -143,7 +143,7 @@ void free_calc_proj_objs(calc_proj_obj* objs, unsigned int num_cores){
   }
 }
 
-void calc_projs_0(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
+void calc_projs_cpu(Data_3d* projs, Data_3d* vol, Data_2d* angles, unsigned int num_cores){
   if(num_cores > (projs->dim)[0]){
     num_cores = (projs->dim)[0];
   }

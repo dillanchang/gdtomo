@@ -1,7 +1,7 @@
 CC          := -gcc
 NVCC        := nvcc
 CFLAGS      := -pedantic-errors -Wall -Wextra -Werror
-LDFLAGS     := -L/usr/lib -lstdc++ -lm -lpthread -L/opt/cuda/lib64 -lcuda -lcudart
+LDFLAGS     := -L/usr/lib -lstdc++ -lm -lpthread -L/opt/cuda/lib64 -lcudart
 OBJ_DIR     := ./build
 TARGET      := ./gdtomo
 INCLUDE     := -Iinclude/
