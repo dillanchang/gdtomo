@@ -41,9 +41,11 @@ __global__ void update_chunk_val(double* projs_diff, unsigned int n_proj,
   unsigned int x0, unsigned int y0, unsigned int z0,
   unsigned int vdx, unsigned int vdy, unsigned int vdz, double* r_hats){
 
-  unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  unsigned int tid_shift = 0;                             // device_idx*dim_chunk*dim_chunk*dim_chunk/num_devices;
+  unsigned int tid_max   = dim_chunk*dim_chunk*dim_chunk; // (device_idx+1)*dim_chunk*dim_chunk*dim_chunk/num_devices;
+  unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x + tid_shift;
 
-  while(tid < dim_chunk*dim_chunk*dim_chunk){
+  while(tid < tid_max){
     int i, j, k, x_center, y_center, z_center, p_x_center, p_y_center;
     double x, y, z, rx, ry, v;
     k = tid/(dim_chunk*dim_chunk);
@@ -85,5 +87,6 @@ void apply_proj_to_chunk(double* dev_projs_diff, unsigned int n_proj,
     dev_projs_diff, n_proj, pdx, pdy, dev_chunk, dim_chunk,
     x0, y0, z0, vdx, vdy, vdz, dev_r_hats
   );
+
 }
 

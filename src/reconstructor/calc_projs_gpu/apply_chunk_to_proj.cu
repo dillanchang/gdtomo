@@ -50,8 +50,11 @@ __global__ void get_proj_val(double* chunk, unsigned int dim_chunk,
   double* chunk_origin, double* projs, double* r_hats,
   unsigned int n_proj, unsigned int pdx, unsigned int pdy, unsigned int lim_proj_z){
 
-  unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  while(tid < n_proj*pdx*pdy){
+  unsigned int tid_shift = 0; // device_idx*n_proj*pdx*pdy/num_devices;
+  unsigned int tid_max   = n_proj*pdx*pdy; // (device_idx+1)*n_proj*pdx*pdy/num_devices;
+  unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x + tid_shift;
+
+  while(tid < tid_max){
     unsigned int p_idx = tid/(pdy*pdx);
     unsigned int py    = (tid-p_idx*pdy*pdx)/pdx;
     unsigned int px    = tid-p_idx*pdy*pdx-py*pdx;
@@ -87,9 +90,10 @@ void apply_chunk_to_proj(double* dev_chunk, unsigned int dim_chunk,
   double* dev_chunk_origin, double* dev_projs, double* dev_r_hats,
   unsigned int num_projs, unsigned int pdx, unsigned int pdy,
   unsigned int lim_proj_z){
-
+  
   get_proj_val<<<BLOCK_COUNT,THREAD_COUNT>>>(dev_chunk, dim_chunk,
-    dev_chunk_origin, dev_projs, dev_r_hats, num_projs, pdx, pdy, lim_proj_z);
+    dev_chunk_origin, dev_projs, dev_r_hats, num_projs, pdx, pdy, lim_proj_z
+  );
 
 }
 
