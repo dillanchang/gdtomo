@@ -37,8 +37,8 @@ __device__ double proj_interp_val_gpu(double* projs_diff, unsigned int p_idx,
 }
 
 __global__ void update_chunk_val(double* projs_diff, unsigned int n_proj,
-  unsigned int pdx, unsigned int pdy, double* chunk, unsigned int dim_chunk,
-  unsigned int x0, unsigned int y0, unsigned int z0,
+  unsigned int n_proj_tot, unsigned int pdx, unsigned int pdy, double* chunk,
+  unsigned int dim_chunk, unsigned int x0, unsigned int y0, unsigned int z0,
   unsigned int vdx, unsigned int vdy, unsigned int vdz, double* r_hats){
 
   unsigned int tid_shift = 0;                             // device_idx*dim_chunk*dim_chunk*dim_chunk/num_devices;
@@ -72,19 +72,19 @@ __global__ void update_chunk_val(double* projs_diff, unsigned int n_proj,
          + p_y_center;
       v = v + proj_interp_val_gpu(projs_diff, p_idx, pdx, pdy, rx, ry);
     }
-    chunk[tid] = v/vdz/n_proj;
+    chunk[tid] = v/vdz/n_proj_tot;
     tid += blockDim.x * gridDim.x;
   }
 
 }
 
 void apply_proj_to_chunk(double* dev_projs_diff, unsigned int n_proj,
-  unsigned int pdx, unsigned int pdy, double* dev_chunk, unsigned int dim_chunk,
-  unsigned int x0, unsigned int y0, unsigned int z0,
+  unsigned int n_proj_tot, unsigned int pdx, unsigned int pdy, double* dev_chunk,
+  unsigned int dim_chunk, unsigned int x0, unsigned int y0, unsigned int z0,
   unsigned int vdx, unsigned int vdy, unsigned int vdz, double* dev_r_hats){
 
   update_chunk_val<<<BLOCK_COUNT,THREAD_COUNT>>>(
-    dev_projs_diff, n_proj, pdx, pdy, dev_chunk, dim_chunk,
+    dev_projs_diff, n_proj, n_proj_tot, pdx, pdy, dev_chunk, dim_chunk,
     x0, y0, z0, vdx, vdy, vdz, dev_r_hats
   );
 

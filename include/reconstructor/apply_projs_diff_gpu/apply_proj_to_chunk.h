@@ -6,9 +6,9 @@
 /* 
  * 
  */
-void apply_proj_to_chunk(double* projs_diff, unsigned int n_proj, unsigned int pdx,
-  unsigned int pdy, double* chunk, unsigned int dim_chunk,
-  unsigned int x0, unsigned int y0, unsigned int z0,
+void apply_proj_to_chunk(double* projs_diff, unsigned int n_proj,
+  unsigned int n_proj_tot, unsigned int pdx, unsigned int pdy, double* chunk,
+  unsigned int dim_chunk, unsigned int x0, unsigned int y0, unsigned int z0,
   unsigned int vdx, unsigned int vdy, unsigned int vdz, double* r_hats);
 
 #endif
