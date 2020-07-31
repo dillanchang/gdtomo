@@ -12,7 +12,7 @@
 #include <stdlib.h>
 
 void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
-  err, Recon_param* param){
+  err, Data_3d* projs_final, Recon_param* param){
 
   time_t start, end;
   int cpu_time_used;
@@ -93,7 +93,20 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
   printf("%s%f%s%f%s%d%s\n", "Final Result:\tR1 Error: ", err_r1,
     ", R2 Error: ", err_r2, ", time elapsed: ", cpu_time_used, "s");
 
-  free_3d_data(&projs_curr);
   free_3d_data(&projs_diff);
   free_2d_data(&err_iter);
+
+  unsigned int *projs_final_dim = (unsigned int *)malloc(3*sizeof(unsigned int));
+  projs_final_dim[0] = (projs->dim)[0];
+  projs_final_dim[1] = (projs->dim)[1];
+  projs_final_dim[2] = (projs->dim)[2];;
+  alloc_3d_data(projs_final, projs_final_dim);
+  for(unsigned int i=0; i<projs_final_dim[0]; i++){
+    for(unsigned int j=0; j<projs_final_dim[1]; j++){
+      for(unsigned int k=0; k<projs_final_dim[2]; k++){
+        (projs_final->data)[i][j][k] = (projs_curr.data)[i][j][k];
+      }
+    }
+  }
+  free_3d_data(&projs_curr);
 }

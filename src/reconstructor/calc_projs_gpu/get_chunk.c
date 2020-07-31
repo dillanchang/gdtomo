@@ -1,6 +1,6 @@
-#include <reconstructor/calc_projs_gpu/get_chunk_overlap.h>
+#include <reconstructor/calc_projs_gpu/get_chunk.h>
 
-double chunk_val_overlap(int x, int y, int z, unsigned int x_lim,
+double chunk_val(int x, int y, int z, unsigned int x_lim,
   unsigned int y_lim, unsigned int z_lim, double*** vol){
   unsigned int x_idx, y_idx, z_idx;
   if(x<0 || x>(int)x_lim-1){
@@ -21,7 +21,7 @@ double chunk_val_overlap(int x, int y, int z, unsigned int x_lim,
   return vol[x_idx][y_idx][z_idx];
 }
 
-int get_chunk_overlap(Data_3d* vol, unsigned int chunk_idx, double* chunk,
+int get_chunk(Data_3d* vol, unsigned int chunk_idx, double* chunk,
   unsigned int dim_chunk, double* chunk_origin){
 
   int curr_x = -2, curr_y = -2, curr_z = -2;
@@ -69,7 +69,7 @@ int get_chunk_overlap(Data_3d* vol, unsigned int chunk_idx, double* chunk,
     for(int y = 0; y < (int)dim_chunk; y++){
       for(int x = 0; x < (int)dim_chunk; x++){
         chunk[z*dim_chunk*dim_chunk+y*dim_chunk+x] =
-          chunk_val_overlap(
+          chunk_val(
             curr_x+x,curr_y+y,curr_z+z,dim_x,dim_y,dim_z,(vol->data)
           );
       }

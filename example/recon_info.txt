@@ -1,4 +1,4 @@
-[projections_filename]
+﻿[projections_filename]
 ./example/projs.npy
 
 [angles_filename]
@@ -9,6 +9,9 @@
 
 [err_filename]
 ./example/err.npy
+
+[projs_final_filename]
+./example/final_projs.npy
 
 [n_iter]
 200

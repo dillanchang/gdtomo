@@ -8,7 +8,7 @@
 #include <string.h>
 
 void read_recon_info(const char* recon_info_fn, Data_3d* projs, Data_2d* angles,
-  char** recon_fn, char** err_fn, Recon_param* param){
+  char** recon_fn, char** err_fn, char** projs_final_fn, Recon_param* param){
 
   FILE *recon_info;
   char *line;
@@ -49,6 +49,14 @@ void read_recon_info(const char* recon_info_fn, Data_3d* projs, Data_2d* angles,
   line[ll-1] = '\0';
   *err_fn = (char *)malloc(ll*sizeof(char));
   strcpy(*err_fn,line);
+  getline(&line, &len, recon_info);
+  getline(&line, &len, recon_info);
+
+  // Final projections path
+  ll = getline(&line, &len, recon_info);
+  line[ll-1] = '\0';
+  *projs_final_fn = (char *)malloc(ll*sizeof(char));
+  strcpy(*projs_final_fn,line);
   getline(&line, &len, recon_info);
   getline(&line, &len, recon_info);
 
@@ -94,27 +102,32 @@ int run_gdtomo_recon(const char* recon_info_fn){
   Data_2d angles;
   char* recon_fn;
   char* err_fn;
+  char* projs_final_fn;
   Recon_param param;
 
-  read_recon_info(recon_info_fn, &projs, &angles, &recon_fn, &err_fn, &param);
+  read_recon_info(recon_info_fn, &projs, &angles, &recon_fn, &err_fn, &projs_final_fn, &param);
   printf("%s\n", "Data import complete");
 
   deg_to_rad(&angles);
 
   Data_3d recon;
   Data_3d err;
-  calc_reconstruction(&recon, &angles, &projs, &err, &param);
+  Data_3d projs_final;
+  calc_reconstruction(&recon, &angles, &projs, &err, &projs_final, &param);
   export_3d_data(recon_fn, &recon);
   export_3d_data(err_fn, &err);
+  export_3d_data(projs_final_fn, &projs_final);
 
   printf("%s\n", "Data export complete");
 
   free(recon_fn);
   free(err_fn);
+  free(projs_final_fn);
   free_3d_data(&projs);
   free_2d_data(&angles);
   free_3d_data(&recon);
   free_3d_data(&err);
+  free_3d_data(&projs_final);
 
   return 0;
 }

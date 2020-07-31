@@ -16,6 +16,6 @@ typedef struct Recon_param{
  * with Euler [angles]. [param]eters are defined in the struct above.
  */
 void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs,
-  Data_3d* err, Recon_param* param);
+  Data_3d* err, Data_3d* projs_final, Recon_param* param);
 
 #endif
