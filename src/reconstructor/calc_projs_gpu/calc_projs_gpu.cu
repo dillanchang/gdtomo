@@ -5,6 +5,7 @@ extern "C"{
   
   #include <data/data_ops.h>
   #include <pthread.h>
+  #include <stdio.h>
   #include <stdlib.h>
   #include <math.h>
 }
@@ -91,14 +92,6 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   size_t total_mem;
   cudaSetDevice(0);
   cudaMemGetInfo(NULL, &total_mem);
-  for(int device_idx = 1; device_idx < n_devices; device_idx++){
-    size_t total_mem_idx;
-    cudaSetDevice(device_idx);
-    cudaMemGetInfo(&total_mem_idx, NULL);
-    if(total_mem_idx < total_mem){
-      total_mem = total_mem_idx;
-    }
-  }
   unsigned int dim_chunk = (unsigned int)pow(1.0*(total_mem*0.25)/sizeof(double),1./3.);
   if(dim_chunk > (vol->dim)[0]+4) dim_chunk = (vol->dim)[0]+4;
   if(dim_chunk > (vol->dim)[1]+4) dim_chunk = (vol->dim)[1]+4;
@@ -111,7 +104,7 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   unsigned int n_jobs = 
     (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(double)/(total_mem*0.25));
   if(n_jobs < n_devices){
-    n_jobs = n_devices;
+    n_devices = n_jobs;
   }
 
   // Establish projection idxs for each job

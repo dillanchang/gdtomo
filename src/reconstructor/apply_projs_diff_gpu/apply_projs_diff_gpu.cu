@@ -103,7 +103,7 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   unsigned int n_jobs = 
     (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(double)/(total_mem*0.25));
   if(n_jobs < n_devices){
-    n_jobs = n_devices;
+    n_devices = n_jobs;
   }
 
   // Establish projection idxs for each job
@@ -197,26 +197,32 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
       for(unsigned int y0=0; y0<vdy; y0=y0+dim_chunk){
         for(unsigned int x0=0; x0<vdx; x0=x0+dim_chunk){
           for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-            data[device_idx].device_idx    = device_idx;
-            data[device_idx].dev_proj_diff = dev_proj_diff[device_idx];
-            data[device_idx].n_projs       = n_projs[job_idx];
-            data[device_idx].n_projs_tot   = n_projs_tot;
-            data[device_idx].pdx           = pdx;
-            data[device_idx].pdy           = pdy;
-            data[device_idx].dev_chunk     = dev_chunk[device_idx];
-            data[device_idx].chunk         = chunks[device_idx];
-            data[device_idx].dim_chunk     = dim_chunk;
-            data[device_idx].x0            = x0;
-            data[device_idx].y0            = y0;
-            data[device_idx].z0            = z0;
-            data[device_idx].vdx           = vdx;
-            data[device_idx].vdy           = vdy;
-            data[device_idx].vdz           = vdz;
-            data[device_idx].dev_r_hats    = dev_r_hats[device_idx];      
-            pthread_create(&(threads[device_idx]), NULL, exec_apply_job, &(data[device_idx]));
+            job_idx = cycle*n_devices + device_idx;
+            if(job_idx < n_jobs){
+              data[device_idx].device_idx    = device_idx;
+              data[device_idx].dev_proj_diff = dev_proj_diff[device_idx];
+              data[device_idx].n_projs       = n_projs[job_idx];
+              data[device_idx].n_projs_tot   = n_projs_tot;
+              data[device_idx].pdx           = pdx;
+              data[device_idx].pdy           = pdy;
+              data[device_idx].dev_chunk     = dev_chunk[device_idx];
+              data[device_idx].chunk         = chunks[device_idx];
+              data[device_idx].dim_chunk     = dim_chunk;
+              data[device_idx].x0            = x0;
+              data[device_idx].y0            = y0;
+              data[device_idx].z0            = z0;
+              data[device_idx].vdx           = vdx;
+              data[device_idx].vdy           = vdy;
+              data[device_idx].vdz           = vdz;
+              data[device_idx].dev_r_hats    = dev_r_hats[device_idx];      
+              pthread_create(&(threads[device_idx]), NULL, exec_apply_job, &(data[device_idx]));
+            }
           }
           for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-            pthread_join(threads[device_idx], NULL);
+            job_idx = cycle*n_devices + device_idx;
+            if(job_idx < n_jobs){
+              pthread_join(threads[device_idx], NULL);
+            }
           }
           apply_chunks_to_vol(chunks, vol, alpha, x0, y0, z0, n_devices, dim_chunk);
         }

@@ -7,7 +7,6 @@ typedef struct Recon_param{
   unsigned int n_iter;
   unsigned int *recon_dim;
   double alpha;
-  unsigned int num_cores;
 } Recon_param;
 
 /* 
