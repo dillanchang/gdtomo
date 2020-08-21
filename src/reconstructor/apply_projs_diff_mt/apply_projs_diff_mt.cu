@@ -5,72 +5,21 @@ extern "C"{
   #include <data/data_ops.h>
   #include <pthread.h>
   #include <stdlib.h>
+  #include <stdio.h>
   #include <math.h>
 }
 
-struct AP_Struct {
-  unsigned int device_idx;
-  float*      dev_proj_diff;
-  unsigned int n_projs;
-  unsigned int n_projs_tot;
-  unsigned int pdx;
-  unsigned int pdy;
-  float*      dev_chunk;
-  float*      chunk;
-  unsigned int dim_chunk;
-  unsigned int x0;
-  unsigned int y0;
-  unsigned int z0;
-  unsigned int vdx;
-  unsigned int vdy;
-  unsigned int vdz;
-  float*      dev_r_hats;      
-};
-
-void* exec_apply_job(void *void_data){
-  AP_Struct *data = (AP_Struct *)void_data;
-  unsigned int device_idx    = data->device_idx;
-  float*      dev_proj_diff = data->dev_proj_diff;
-  unsigned int n_projs       = data->n_projs;
-  unsigned int n_projs_tot   = data->n_projs_tot;
-  unsigned int pdx           = data->pdx;
-  unsigned int pdy           = data->pdy;
-  float*      dev_chunk     = data->dev_chunk;
-  float*      chunk         = data->chunk;
-  unsigned int dim_chunk     = data->dim_chunk;
-  unsigned int x0            = data->x0;
-  unsigned int y0            = data->y0;
-  unsigned int z0            = data->z0;
-  unsigned int vdx           = data->vdx;
-  unsigned int vdy           = data->vdy;
-  unsigned int vdz           = data->vdz;
-  float*      dev_r_hats    = data->dev_r_hats;
-
-  cudaSetDevice(device_idx);
-  apply_proj_to_chunk(dev_proj_diff, n_projs, n_projs_tot, pdx, pdy, dev_chunk,
-    dim_chunk, x0, y0, z0, vdx, vdy, vdz, dev_r_hats);
-  cudaMemcpy( chunk,
-              dev_chunk,
-              dim_chunk*dim_chunk*dim_chunk*sizeof(float),
-              cudaMemcpyDeviceToHost );
-  return 0;
-}
-
-
-void apply_chunks_to_vol(float** chunks, Data_3d* vol, float alpha,
-  unsigned int x0, unsigned int y0, unsigned int z0, unsigned int n_devices,
-  unsigned int dim_chunk){
+void apply_chunk_to_vol(float* chunk, Data_3d* vol, float alpha,
+  unsigned int x0, unsigned int y0, unsigned int z0, unsigned int dim_chunk){
 
   unsigned int x, y, z;
-  for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-    for(unsigned int i=0; i<dim_chunk; i++){
-      for(unsigned int j=0; j<dim_chunk; j++){
-        for(unsigned int k=0; k<dim_chunk; k++){
-          x = i+x0; y = j+y0; z = k+z0;
-          if(x<(vol->dim)[0] && y<(vol->dim)[1] && z<(vol->dim)[2]){
-            (vol->data)[x][y][z] = (vol->data)[x][y][z]
-              + alpha*chunks[device_idx][k*dim_chunk*dim_chunk+j*dim_chunk+i];
-          }
+  for(unsigned int i=0; i<dim_chunk; i++){
+    for(unsigned int j=0; j<dim_chunk; j++){
+      for(unsigned int k=0; k<dim_chunk; k++){
+        x = i+x0; y = j+y0; z = k+z0;
+        if(x<(vol->dim)[0] && y<(vol->dim)[1] && z<(vol->dim)[2]){
+          (vol->data)[x][y][z] = (vol->data)[x][y][z]
+            + alpha*chunk[k*dim_chunk*dim_chunk+j*dim_chunk+i];
         }
       }
     }
@@ -79,10 +28,6 @@ void apply_chunks_to_vol(float** chunks, Data_3d* vol, float alpha,
 
 void apply_projs_diff_mt(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
   float alpha){
-
-  // Get device count
-  int n_devices;
-  cudaGetDeviceCount(&n_devices);
 
   // Get chunk size
   unsigned int vdx = (vol->dim)[0];
@@ -101,10 +46,7 @@ void apply_projs_diff_mt(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   unsigned int pdx = (projs_diff->dim)[1];
   unsigned int pdy = (projs_diff->dim)[2];
   unsigned int n_jobs = 
-    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(float)/(total_mem*0.25));
-  if(n_jobs < n_devices){
-    n_devices = n_jobs;
-  }
+    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(float)/(total_mem*0.50));
 
   // Establish projection idxs for each job
   unsigned int* proj_idx_low  = (unsigned int*)malloc(n_jobs*sizeof(unsigned int));
@@ -160,93 +102,41 @@ void apply_projs_diff_mt(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   }
 
   // Allocate chunks
-  float** chunks = (float**)malloc(n_devices*sizeof(float *));
-  for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-    chunks[device_idx] = (float *)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(float));
-  }
+  float* chunk = (float *)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(float));
+  float *dev_chunk, *dev_proj_diff, *dev_r_hats;
 
-  float **dev_chunk, **dev_proj_diff, **dev_r_hats;
-  dev_proj_diff = (float **)malloc(n_devices*sizeof(float *));
-  dev_r_hats    = (float **)malloc(n_devices*sizeof(float *));
-  dev_chunk     = (float **)malloc(n_devices*sizeof(float *));
-
-  AP_Struct* data   = (AP_Struct *)malloc(n_devices*sizeof(AP_Struct));
-  pthread_t* threads = (pthread_t *)malloc(n_devices*sizeof(pthread_t));
-
-  unsigned int n_cycles = (unsigned int)ceil(1.0*n_jobs/n_devices);
-  for(unsigned int cycle = 0; cycle < n_cycles; cycle++){
-    unsigned int job_idx;
-
-    for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-      cudaSetDevice(device_idx);
-      job_idx = cycle*n_devices + device_idx;
-      cudaMalloc( (void**)&(dev_proj_diff[device_idx]), n_projs[job_idx]*pdx*pdy*sizeof(float)  );
-      cudaMalloc( (void**)&(dev_r_hats[device_idx]), n_projs[job_idx]*3*3*sizeof(float)         );
-      cudaMalloc( (void**)&(dev_chunk[device_idx]), dim_chunk*dim_chunk*dim_chunk*sizeof(float) );
-      cudaMemcpy( dev_proj_diff[device_idx], 
-                  proj_diff_arrs[job_idx],
-                  n_projs[job_idx]*pdx*pdy*sizeof(float),
-                  cudaMemcpyHostToDevice );
-      cudaMemcpy( dev_r_hats[device_idx],
-                  r_hats[job_idx],
-                  n_projs[job_idx]*3*3*sizeof(float),
-                  cudaMemcpyHostToDevice );
-    }
+  for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
+    cudaMalloc( (void**)&(dev_proj_diff), n_projs[job_idx]*pdx*pdy*sizeof(float)      );
+    cudaMalloc( (void**)&(dev_r_hats),    n_projs[job_idx]*3*3*sizeof(float)          );
+    cudaMalloc( (void**)&(dev_chunk),     dim_chunk*dim_chunk*dim_chunk*sizeof(float) );
+    cudaMemcpy( dev_proj_diff, 
+                proj_diff_arrs[job_idx],
+                n_projs[job_idx]*pdx*pdy*sizeof(float),
+                cudaMemcpyHostToDevice );
+    cudaMemcpy( dev_r_hats,
+                r_hats[job_idx],
+                n_projs[job_idx]*3*3*sizeof(float),
+                cudaMemcpyHostToDevice );
 
     for(unsigned int z0=0; z0<vdz; z0=z0+dim_chunk){
       for(unsigned int y0=0; y0<vdy; y0=y0+dim_chunk){
         for(unsigned int x0=0; x0<vdx; x0=x0+dim_chunk){
-          for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-            job_idx = cycle*n_devices + device_idx;
-            if(job_idx < n_jobs){
-              data[device_idx].device_idx    = device_idx;
-              data[device_idx].dev_proj_diff = dev_proj_diff[device_idx];
-              data[device_idx].n_projs       = n_projs[job_idx];
-              data[device_idx].n_projs_tot   = n_projs_tot;
-              data[device_idx].pdx           = pdx;
-              data[device_idx].pdy           = pdy;
-              data[device_idx].dev_chunk     = dev_chunk[device_idx];
-              data[device_idx].chunk         = chunks[device_idx];
-              data[device_idx].dim_chunk     = dim_chunk;
-              data[device_idx].x0            = x0;
-              data[device_idx].y0            = y0;
-              data[device_idx].z0            = z0;
-              data[device_idx].vdx           = vdx;
-              data[device_idx].vdy           = vdy;
-              data[device_idx].vdz           = vdz;
-              data[device_idx].dev_r_hats    = dev_r_hats[device_idx];      
-              pthread_create(&(threads[device_idx]), NULL, exec_apply_job, &(data[device_idx]));
-            }
-          }
-          for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-            job_idx = cycle*n_devices + device_idx;
-            if(job_idx < n_jobs){
-              pthread_join(threads[device_idx], NULL);
-            }
-          }
-          apply_chunks_to_vol(chunks, vol, alpha, x0, y0, z0, n_devices, dim_chunk);
+          apply_proj_to_chunk(dev_proj_diff, n_projs[job_idx], n_projs_tot, pdx, pdy, dev_chunk,
+            dim_chunk, x0, y0, z0, vdx, vdy, vdz, dev_r_hats);
+          cudaMemcpy( chunk,
+                      dev_chunk,
+                      dim_chunk*dim_chunk*dim_chunk*sizeof(float),
+                      cudaMemcpyDeviceToHost );
+          apply_chunk_to_vol(chunk, vol, alpha, x0, y0, z0, dim_chunk);
         }
       }
     }
-
-    for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-      cudaSetDevice(device_idx);
-      cudaFree(dev_chunk[device_idx]);
-      cudaFree(dev_proj_diff[device_idx]);
-      cudaFree(dev_r_hats[device_idx]);
-    }
-    
+    cudaFree(dev_chunk);
+    cudaFree(dev_proj_diff);
+    cudaFree(dev_r_hats);
   }
 
-  free(data);
-  free(threads);
-  free(dev_chunk);
-  free(dev_proj_diff);
-  free(dev_r_hats);
-  for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-    free(chunks[device_idx]);
-  }
-  free(chunks);
+  free(chunk);
   free(proj_idx_low);
   free(n_projs);
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){

@@ -10,31 +10,10 @@ extern "C"{
   #include <math.h>
 }
 
-struct PC_Struct {
-  float*       proj_arr;
-  float*       r_hats;
-  Data_3d*      vol;
-  int           device_idx;
-  unsigned int  dim_chunk;
-  unsigned int  n_proj;
-  unsigned int  pdx;
-  unsigned int  pdy;
-  float        lim_proj_z;
-};
-
-void* exec_proj_job(void *void_data){
-  PC_Struct *data = (PC_Struct *)void_data;
-  float*       proj_arr   = data->proj_arr  ;
-  float*       r_hats     = data->r_hats    ;
-  Data_3d*      vol        = data->vol       ;
-  int           device_idx = data->device_idx;
-  unsigned int  dim_chunk  = data->dim_chunk ;
-  unsigned int  n_proj     = data->n_proj    ;
-  unsigned int  pdx        = data->pdx       ;
-  unsigned int  pdy        = data->pdy       ;
-  float        lim_proj_z = data->lim_proj_z;
-
-  cudaSetDevice(device_idx);
+void exec_proj_job(float* proj_arr, float* r_hats, Data_3d* vol,
+  unsigned int dim_chunk, unsigned int n_proj, unsigned int pdx,
+  unsigned int pdy, float lim_proj_z){
+  
   float* chunk = (float*)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(float));
   float* chunk_origin = (float*)malloc(3*sizeof(float));
   float *dev_chunk, *dev_chunk_origin, *dev_projs, *dev_r_hats;
@@ -79,15 +58,10 @@ void* exec_proj_job(void *void_data){
   free(chunk       );
   free(chunk_origin);
 
-  return 0;
 }
 
 void calc_projs_mt(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   
-  // Get device count
-  int n_devices;
-  cudaGetDeviceCount(&n_devices);
-
   // Get chunk size based on GPU with smallest memory
   size_t total_mem;
   cudaSetDevice(0);
@@ -103,9 +77,6 @@ void calc_projs_mt(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   unsigned int pdy = (projs->dim)[2];
   unsigned int n_jobs = 
     (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(float)/(total_mem*0.25));
-  if(n_jobs < n_devices){
-    n_devices = n_jobs;
-  }
 
   // Establish projection idxs for each job
   unsigned int* proj_idx_low  = (unsigned int*)malloc(n_jobs*sizeof(unsigned int));
@@ -163,49 +134,21 @@ void calc_projs_mt(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   }
 
   // Perform main algorithm
-  PC_Struct* data   = (PC_Struct *)malloc(n_devices*sizeof(PC_Struct));
-  pthread_t* threads = (pthread_t *)malloc(n_devices*sizeof(pthread_t));
-  unsigned int n_cycles = (unsigned int)ceil(1.0*n_jobs/n_devices);
-  for(unsigned int cycle = 0; cycle < n_cycles; cycle++){
-    unsigned int job_idx;
-    for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-      job_idx = cycle*n_devices + device_idx;
-      if(job_idx < n_jobs){
-        data[device_idx].proj_arr   = proj_arrs[job_idx];
-        data[device_idx].r_hats     = r_hats[job_idx];
-        data[device_idx].vol        = vol;
-        data[device_idx].device_idx = device_idx;
-        data[device_idx].dim_chunk  = dim_chunk;
-        data[device_idx].n_proj     = n_projs[job_idx];
-        data[device_idx].pdx        = pdx;
-        data[device_idx].pdy        = pdy;
-        data[device_idx].lim_proj_z = lim_proj_z;
-        pthread_create(&(threads[device_idx]), NULL, exec_proj_job, &(data[device_idx]));
-      }
-    }
-    for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-      job_idx = cycle*n_devices + device_idx;
-      if(job_idx < n_jobs){
-        pthread_join(threads[device_idx], NULL);
-      }
-    }
-    for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-      job_idx = cycle*n_devices + device_idx;
-      for(unsigned int i = 0; i < n_projs[job_idx]; i++){
-        unsigned int proj_idx = proj_idx_low[job_idx]+i;
-        for(unsigned int py = 0; py < pdy; py++){
-          for(unsigned int px = 0; px < pdx; px++){
-            (projs->data)[proj_idx][px][py] =
-              proj_arrs[job_idx][i*pdy*pdx+py*pdx+px];
-          }
+  for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
+    exec_proj_job(proj_arrs[job_idx],r_hats[job_idx],vol,dim_chunk,n_projs[job_idx],pdx,
+        pdy, lim_proj_z);
+    for(unsigned int i = 0; i < n_projs[job_idx]; i++){
+      unsigned int proj_idx = proj_idx_low[job_idx]+i;
+      for(unsigned int py = 0; py < pdy; py++){
+        for(unsigned int px = 0; px < pdx; px++){
+          (projs->data)[proj_idx][px][py] =
+            proj_arrs[job_idx][i*pdy*pdx+py*pdx+px];
         }
       }
     }
   }
 
   // Free mallocs
-  free(data);
-  free(threads);
   free(proj_idx_low);
   free(n_projs);
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){

@@ -52,7 +52,10 @@ void *exec_calc_proj(void *x_void_ptr){
 
 void calc_projs_st(Data_2d *recon, Data_3d *projs_curr, int* wxz, float* ww1,
   unsigned int Nxz){
-  unsigned int num_cores = get_nprocs()-4;
+  unsigned int num_cores = get_nprocs()-2;
+  if(num_cores < 1){
+    num_cores = 1;
+  }
   struct PCST_Struct *data = (struct PCST_Struct *)malloc(num_cores*sizeof(PCST_Struct));
   pthread_t* threads = (pthread_t *)malloc(num_cores*sizeof(pthread_t));
   unsigned int N_projs = (projs_curr->dim)[0];
@@ -75,5 +78,8 @@ void calc_projs_st(Data_2d *recon, Data_3d *projs_curr, int* wxz, float* ww1,
   for(unsigned int core = 0; core < num_cores; core++){
     pthread_join(threads[core], NULL);
   }
+
+  free(data);
+  free(threads);
 }
 

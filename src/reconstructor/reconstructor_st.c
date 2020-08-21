@@ -111,6 +111,12 @@ void compute_weights(int** weights_xz, float** weights_w1, unsigned int* Nxz,
     }
   }
 
+  free(x_count);
+  for(unsigned int i= 0; i < n_projs; i++){
+    free(r_hats[i]);
+  }
+  free(r_hats);
+
 }
 
 void free_weights(int* weights_xz, float* weights_w1, int* weights_x, float* weights_w2){

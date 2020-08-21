@@ -64,21 +64,6 @@ void import_recon_data(const char* recon_data_fn, Data_3d* projs, Data_2d* angle
   (*output_fn)[output_fn_len-1] = 0;
   mxDestroyArray(a);
 
-  // Read recon params
-  a = matGetVariable(f,"mode");
-  unsigned short* mode_short = (unsigned short*)mxGetChars(a);
-  unsigned int mode_len = 0;
-  while(mode_short[mode_len] != 0){
-    mode_len = mode_len + 1;
-  }
-  mode_len = mode_len + 1;
-  (param->mode) = (char *)malloc(mode_len*sizeof(char));
-  for(unsigned int i = 0; i < mode_len-1; i++){
-    (param->mode)[i] = (char)(mode_short[i]);
-  }
-  (param->mode)[mode_len-1] = 0;
-  mxDestroyArray(a);
-
   a = matGetVariable(f,"n_iter");
   param->n_iter = (unsigned int)(mxGetPr(a)[0]);
   mxDestroyArray(a);
@@ -161,19 +146,18 @@ int run_gdtomo_recon(const char* recon_data_fn){
   Data_3d err;
   Data_3d projs_final;
 
-  if(strcmp((const char*)param.mode,"single_tilt")==0){
-    calc_reconstruction_st(&recon, &angles, &projs, &err, &projs_final, &param);
-  }
-  else if(strcmp((const char*)param.mode,"multiple_tilt")==0){
-    calc_reconstruction_mt(&recon, &angles, &projs, &err, &projs_final, &param);
-  }
+  // if(strcmp((const char*)param.mode,"single_tilt")==0){
+  //   calc_reconstruction_st(&recon, &angles, &projs, &err, &projs_final, &param);
+  // }
+  // else if(strcmp((const char*)param.mode,"multiple_tilt")==0){
+  calc_reconstruction_mt(&recon, &angles, &projs, &err, &projs_final, &param);
+  // }
 
   export_recon_data(&recon, &err, &projs_final, &output_fn);
 
   printf("%s\n", "Data export complete");
 
   free(output_fn);
-  free(param.mode);
   free_3d_data(&projs);
   free_2d_data(&angles);
   free_3d_data(&recon);
