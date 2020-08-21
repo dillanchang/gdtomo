@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 
 #include <test/test.h>
 #include <gdtomo_recon.h>
@@ -12,6 +13,8 @@ int main(int argc, char** argv)
   printf("%s\n", "#                                                                           #");
   printf("%s\n", "#                                            github.com/dillanchang/gdtomo  #");
   printf("%s\n", "#===========================================================================#");
+
+  printf("This system has %d processors available.\n", get_nprocs());
 
   if(argc == 3 && (strcmp(argv[1],"recon")==0)){
     const char * recon_info = argv[2];

@@ -1,6 +1,6 @@
 extern "C"{
-  #include <reconstructor/apply_projs_diff_gpu/apply_projs_diff_gpu.h>
-  #include <reconstructor/apply_projs_diff_gpu/apply_proj_to_chunk.h>
+  #include <reconstructor/apply_projs_diff_mt/apply_projs_diff_mt.h>
+  #include <reconstructor/apply_projs_diff_mt/apply_proj_to_chunk.h>
   
   #include <data/data_ops.h>
   #include <pthread.h>
@@ -10,13 +10,13 @@ extern "C"{
 
 struct AP_Struct {
   unsigned int device_idx;
-  double*      dev_proj_diff;
+  float*      dev_proj_diff;
   unsigned int n_projs;
   unsigned int n_projs_tot;
   unsigned int pdx;
   unsigned int pdy;
-  double*      dev_chunk;
-  double*      chunk;
+  float*      dev_chunk;
+  float*      chunk;
   unsigned int dim_chunk;
   unsigned int x0;
   unsigned int y0;
@@ -24,19 +24,19 @@ struct AP_Struct {
   unsigned int vdx;
   unsigned int vdy;
   unsigned int vdz;
-  double*      dev_r_hats;      
+  float*      dev_r_hats;      
 };
 
 void* exec_apply_job(void *void_data){
   AP_Struct *data = (AP_Struct *)void_data;
   unsigned int device_idx    = data->device_idx;
-  double*      dev_proj_diff = data->dev_proj_diff;
+  float*      dev_proj_diff = data->dev_proj_diff;
   unsigned int n_projs       = data->n_projs;
   unsigned int n_projs_tot   = data->n_projs_tot;
   unsigned int pdx           = data->pdx;
   unsigned int pdy           = data->pdy;
-  double*      dev_chunk     = data->dev_chunk;
-  double*      chunk         = data->chunk;
+  float*      dev_chunk     = data->dev_chunk;
+  float*      chunk         = data->chunk;
   unsigned int dim_chunk     = data->dim_chunk;
   unsigned int x0            = data->x0;
   unsigned int y0            = data->y0;
@@ -44,20 +44,20 @@ void* exec_apply_job(void *void_data){
   unsigned int vdx           = data->vdx;
   unsigned int vdy           = data->vdy;
   unsigned int vdz           = data->vdz;
-  double*      dev_r_hats    = data->dev_r_hats;
+  float*      dev_r_hats    = data->dev_r_hats;
 
   cudaSetDevice(device_idx);
   apply_proj_to_chunk(dev_proj_diff, n_projs, n_projs_tot, pdx, pdy, dev_chunk,
     dim_chunk, x0, y0, z0, vdx, vdy, vdz, dev_r_hats);
   cudaMemcpy( chunk,
               dev_chunk,
-              dim_chunk*dim_chunk*dim_chunk*sizeof(double),
+              dim_chunk*dim_chunk*dim_chunk*sizeof(float),
               cudaMemcpyDeviceToHost );
   return 0;
 }
 
 
-void apply_chunks_to_vol(double** chunks, Data_3d* vol, double alpha,
+void apply_chunks_to_vol(float** chunks, Data_3d* vol, float alpha,
   unsigned int x0, unsigned int y0, unsigned int z0, unsigned int n_devices,
   unsigned int dim_chunk){
 
@@ -77,8 +77,8 @@ void apply_chunks_to_vol(double** chunks, Data_3d* vol, double alpha,
   }
 }
 
-void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
-  double alpha){
+void apply_projs_diff_mt(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles, 
+  float alpha){
 
   // Get device count
   int n_devices;
@@ -91,7 +91,7 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   size_t total_mem;
   cudaSetDevice(0);
   cudaMemGetInfo(NULL, &total_mem);
-  unsigned int dim_chunk = (unsigned int)pow(total_mem*0.25/sizeof(double),1./3.);
+  unsigned int dim_chunk = (unsigned int)pow(total_mem*0.25/sizeof(float),1./3.);
   if(dim_chunk > vdx) dim_chunk = vdx;
   if(dim_chunk > vdy) dim_chunk = vdy;
   if(dim_chunk > vdz) dim_chunk = vdz;
@@ -101,7 +101,7 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   unsigned int pdx = (projs_diff->dim)[1];
   unsigned int pdy = (projs_diff->dim)[2];
   unsigned int n_jobs = 
-    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(double)/(total_mem*0.25));
+    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(float)/(total_mem*0.25));
   if(n_jobs < n_devices){
     n_devices = n_jobs;
   }
@@ -120,13 +120,13 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   }
 
   // Calculate r_hats
-  double x_hat_i[3] = {1,0,0};
-  double y_hat_i[3] = {0,1,0};
-  double z_hat_i[3] = {0,0,1};
-  double** r_hats = (double **)malloc(n_jobs*sizeof(double *));
-  double v[3];
+  float x_hat_i[3] = {1,0,0};
+  float y_hat_i[3] = {0,1,0};
+  float z_hat_i[3] = {0,0,1};
+  float** r_hats = (float **)malloc(n_jobs*sizeof(float *));
+  float v[3];
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
-    r_hats[job_idx] = (double *)malloc(n_projs[job_idx]*3*3*sizeof(double));
+    r_hats[job_idx] = (float *)malloc(n_projs[job_idx]*3*3*sizeof(float));
     unsigned int proj_idx;
     for(unsigned int i = 0; i < n_projs[job_idx]; i++){
       proj_idx = proj_idx_low[job_idx] + i;
@@ -146,9 +146,9 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   }
 
   // Allocate proj_diff_arrs
-  double** proj_diff_arrs = (double **)malloc(n_jobs*sizeof(double *));
+  float** proj_diff_arrs = (float **)malloc(n_jobs*sizeof(float *));
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
-    proj_diff_arrs[job_idx] = (double *)malloc(n_projs[job_idx]*pdy*pdx*sizeof(double));
+    proj_diff_arrs[job_idx] = (float *)malloc(n_projs[job_idx]*pdy*pdx*sizeof(float));
     for(unsigned int i = 0; i < n_projs[job_idx]; i++){
       unsigned int proj_idx = proj_idx_low[job_idx]+i;
       for(unsigned int px = 0; px < pdx; px++){
@@ -160,15 +160,15 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
   }
 
   // Allocate chunks
-  double** chunks = (double**)malloc(n_devices*sizeof(double *));
+  float** chunks = (float**)malloc(n_devices*sizeof(float *));
   for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
-    chunks[device_idx] = (double *)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(double));
+    chunks[device_idx] = (float *)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(float));
   }
 
-  double **dev_chunk, **dev_proj_diff, **dev_r_hats;
-  dev_proj_diff = (double **)malloc(n_devices*sizeof(double *));
-  dev_r_hats    = (double **)malloc(n_devices*sizeof(double *));
-  dev_chunk     = (double **)malloc(n_devices*sizeof(double *));
+  float **dev_chunk, **dev_proj_diff, **dev_r_hats;
+  dev_proj_diff = (float **)malloc(n_devices*sizeof(float *));
+  dev_r_hats    = (float **)malloc(n_devices*sizeof(float *));
+  dev_chunk     = (float **)malloc(n_devices*sizeof(float *));
 
   AP_Struct* data   = (AP_Struct *)malloc(n_devices*sizeof(AP_Struct));
   pthread_t* threads = (pthread_t *)malloc(n_devices*sizeof(pthread_t));
@@ -180,16 +180,16 @@ void apply_projs_diff_gpu(Data_3d* vol, Data_3d* projs_diff, Data_2d* angles,
     for(unsigned int device_idx = 0; device_idx < n_devices; device_idx++){
       cudaSetDevice(device_idx);
       job_idx = cycle*n_devices + device_idx;
-      cudaMalloc( (void**)&(dev_proj_diff[device_idx]), n_projs[job_idx]*pdx*pdy*sizeof(double)  );
-      cudaMalloc( (void**)&(dev_r_hats[device_idx]), n_projs[job_idx]*3*3*sizeof(double)         );
-      cudaMalloc( (void**)&(dev_chunk[device_idx]), dim_chunk*dim_chunk*dim_chunk*sizeof(double) );
+      cudaMalloc( (void**)&(dev_proj_diff[device_idx]), n_projs[job_idx]*pdx*pdy*sizeof(float)  );
+      cudaMalloc( (void**)&(dev_r_hats[device_idx]), n_projs[job_idx]*3*3*sizeof(float)         );
+      cudaMalloc( (void**)&(dev_chunk[device_idx]), dim_chunk*dim_chunk*dim_chunk*sizeof(float) );
       cudaMemcpy( dev_proj_diff[device_idx], 
                   proj_diff_arrs[job_idx],
-                  n_projs[job_idx]*pdx*pdy*sizeof(double),
+                  n_projs[job_idx]*pdx*pdy*sizeof(float),
                   cudaMemcpyHostToDevice );
       cudaMemcpy( dev_r_hats[device_idx],
                   r_hats[job_idx],
-                  n_projs[job_idx]*3*3*sizeof(double),
+                  n_projs[job_idx]*3*3*sizeof(float),
                   cudaMemcpyHostToDevice );
     }
 

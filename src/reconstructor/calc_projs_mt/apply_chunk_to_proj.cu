@@ -1,5 +1,5 @@
 extern "C"{
-  #include <reconstructor/calc_projs_gpu/apply_chunk_to_proj.h>
+  #include <reconstructor/calc_projs_mt/apply_chunk_to_proj.h>
 
   #include <data/data_ops.h>
   #include <math.h>
@@ -8,8 +8,8 @@ extern "C"{
 #define BLOCK_COUNT 512
 #define THREAD_COUNT 512
 
-__device__ int in_chunk(double x, double y, double z, unsigned int dim_chunk){
-  double low = 0.5, high = (double)(dim_chunk-1)-.5;
+__device__ int in_chunk(float x, float y, float z, unsigned int dim_chunk){
+  float low = 0.5, high = (float)(dim_chunk-1)-.5;
   if(x < low || x >= high){
     return 0;
   }
@@ -22,12 +22,12 @@ __device__ int in_chunk(double x, double y, double z, unsigned int dim_chunk){
   return 1;
 }
 
-__device__ double interp3(double x, double y, double z, double* chunk, unsigned int d){
-  double x_0 = x-floor(x); int i = (int)floor(x);
-  double y_0 = y-floor(y); int j = (int)floor(y);
-  double z_0 = z-floor(z); int k = (int)floor(z);
+__device__ float interp3(float x, float y, float z, float* chunk, unsigned int d){
+  float x_0 = x-floor(x); int i = (int)floor(x);
+  float y_0 = y-floor(y); int j = (int)floor(y);
+  float z_0 = z-floor(z); int k = (int)floor(z);
   
-  double q000, q100, q010, q001, q110, q101, q011, q111;
+  float q000, q100, q010, q001, q110, q101, q011, q111;
   q000 = chunk[k*d*d+j*d+i];
   q100 = chunk[k*d*d+j*d+(i+1)];
   q010 = chunk[k*d*d+(j+1)*d+i];
@@ -46,8 +46,8 @@ __device__ double interp3(double x, double y, double z, double* chunk, unsigned 
           q111*x_0*y_0*z_0;
 }
 
-__global__ void get_proj_val(double* chunk, unsigned int dim_chunk,
-  double* chunk_origin, double* projs, double* r_hats,
+__global__ void get_proj_val(float* chunk, unsigned int dim_chunk,
+  float* chunk_origin, float* projs, float* r_hats,
   unsigned int n_proj, unsigned int pdx, unsigned int pdy, unsigned int lim_proj_z){
 
   unsigned int tid_shift = 0; // device_idx*n_proj*pdx*pdy/num_devices;
@@ -59,12 +59,12 @@ __global__ void get_proj_val(double* chunk, unsigned int dim_chunk,
     unsigned int py    = (tid-p_idx*pdy*pdx)/pdx;
     unsigned int px    = tid-p_idx*pdy*pdx-py*pdx;
 
-    double x, y, z, x_p, y_p, z_p, v;
-    x_p = (double)((int)px-(int)(pdx/2));
-    y_p = (double)((int)py-(int)(pdy/2));
+    float x, y, z, x_p, y_p, z_p, v;
+    x_p = (float)((int)px-(int)(pdx/2));
+    y_p = (float)((int)py-(int)(pdy/2));
     v = 0.;
     for(int k_p = -1*(int)(lim_proj_z); k_p <= (int)(lim_proj_z); k_p++){
-      z_p = (double)k_p;
+      z_p = (float)k_p;
       x = x_p*r_hats[p_idx*9+0*3+0]
         + y_p*r_hats[p_idx*9+0*3+1]
         + z_p*r_hats[p_idx*9+0*3+2]
@@ -86,8 +86,8 @@ __global__ void get_proj_val(double* chunk, unsigned int dim_chunk,
   }
 }
 
-void apply_chunk_to_proj(double* dev_chunk, unsigned int dim_chunk,
-  double* dev_chunk_origin, double* dev_projs, double* dev_r_hats,
+void apply_chunk_to_proj(float* dev_chunk, unsigned int dim_chunk,
+  float* dev_chunk_origin, float* dev_projs, float* dev_r_hats,
   unsigned int num_projs, unsigned int pdx, unsigned int pdy,
   unsigned int lim_proj_z){
   

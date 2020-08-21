@@ -4,19 +4,19 @@
 
 void alloc_2d_data(Data_2d* d, unsigned int* dim){
   d->dim  = dim;
-  d->data = (double**)malloc(dim[0]*sizeof(double*));
+  d->data = (float**)malloc(dim[0]*sizeof(float*));
   for(unsigned int i=0; i<dim[0]; i++){
-    (d->data)[i] = (double*)malloc(dim[1]*sizeof(double));
+    (d->data)[i] = (float*)malloc(dim[1]*sizeof(float));
   }
 }
 
 void alloc_3d_data(Data_3d* d, unsigned int* dim){
   d->dim  = dim;
-  d->data = (double***)malloc(dim[0]*sizeof(double**));
+  d->data = (float***)malloc(dim[0]*sizeof(float**));
   for(unsigned int i=0; i<dim[0]; i++){
-    (d->data)[i] = (double**)malloc(dim[1]*sizeof(double*));
+    (d->data)[i] = (float**)malloc(dim[1]*sizeof(float*));
     for(unsigned int j=0; j<dim[1]; j++){
-      (d->data)[i][j] = (double*)malloc(dim[2]*sizeof(double));
+      (d->data)[i][j] = (float*)malloc(dim[2]*sizeof(float));
     }
   }
 }

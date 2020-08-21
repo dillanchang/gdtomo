@@ -1,5 +1,4 @@
 #include <data/data_types.h>
-#include <data/file_io.h>
 #include <data/data_ops.h>
 #include <reconstructor/reconstructor.h>
 
@@ -14,12 +13,12 @@ void import_recon_data(const char* recon_data_fn, Data_3d* projs, Data_2d* angle
 
   MATFile* f;
   mxArray* a;
-  double* data;
+  float* data;
   f = matOpen(recon_data_fn, "r");
 
   // Read projections
   a = matGetVariable(f,"projs");
-  data = (double *)mxGetPr(a);
+  data = (float *)mxGetPr(a);
   const long* projs_dim_raw = (const long *)mxGetDimensions(a);
   unsigned int *projs_dim = (unsigned int *)malloc(3*sizeof(unsigned int));
   projs_dim[0] = (unsigned int)(projs_dim_raw[0]);
@@ -37,9 +36,9 @@ void import_recon_data(const char* recon_data_fn, Data_3d* projs, Data_2d* angle
   
   // Read angles
   a = matGetVariable(f,"angles");
-  data = (double *)mxGetPr(a);
+  data = (float *)mxGetPr(a);
   const long* angles_dim_raw = (const long *)mxGetDimensions(a);
-  unsigned int *angles_dim = (unsigned int *)malloc(2*sizeof(double));
+  unsigned int *angles_dim = (unsigned int *)malloc(2*sizeof(float));
   angles_dim[0] = (unsigned int )(angles_dim_raw[0]);
   angles_dim[1] = (unsigned int )(angles_dim_raw[1]);
   alloc_2d_data(angles, angles_dim);
@@ -65,6 +64,21 @@ void import_recon_data(const char* recon_data_fn, Data_3d* projs, Data_2d* angle
   (*output_fn)[output_fn_len-1] = 0;
   mxDestroyArray(a);
 
+  // Read recon params
+  a = matGetVariable(f,"mode");
+  unsigned short* mode_short = (unsigned short*)mxGetChars(a);
+  unsigned int mode_len = 0;
+  while(mode_short[mode_len] != 0){
+    mode_len = mode_len + 1;
+  }
+  mode_len = mode_len + 1;
+  (param->mode) = (char *)malloc(mode_len*sizeof(char));
+  for(unsigned int i = 0; i < mode_len-1; i++){
+    (param->mode)[i] = (char)(mode_short[i]);
+  }
+  (param->mode)[mode_len-1] = 0;
+  mxDestroyArray(a);
+
   a = matGetVariable(f,"n_iter");
   param->n_iter = (unsigned int)(mxGetPr(a)[0]);
   mxDestroyArray(a);
@@ -74,7 +88,7 @@ void import_recon_data(const char* recon_data_fn, Data_3d* projs, Data_2d* angle
   mxDestroyArray(a);
 
   a = matGetVariable(f,"recon_dim");
-  param->recon_dim = (unsigned int *)malloc(3*sizeof(double));
+  param->recon_dim = (unsigned int *)malloc(3*sizeof(float));
   (param->recon_dim)[0]= (unsigned int)((mxGetPr(a))[0]);
   (param->recon_dim)[1]= (unsigned int)((mxGetPr(a))[1]);
   (param->recon_dim)[2]= (unsigned int)((mxGetPr(a))[2]);
@@ -91,8 +105,8 @@ void export_recon_data(Data_3d* recon, Data_3d* err, Data_3d* projs_final,
   f = matOpen((const char *)(*output_fn), "w");
 
   const size_t recon_dim[3] = {(recon->dim)[0],(recon->dim)[1],(recon->dim)[2]};
-  mxArray *recon_mx = mxCreateNumericArray(3,recon_dim,mxDOUBLE_CLASS,0);
-  double *recon_mx_ptr = (double *)mxGetPr(recon_mx);
+  mxArray *recon_mx = mxCreateNumericArray(3,recon_dim,mxSINGLE_CLASS,0);
+  float *recon_mx_ptr = (float *)mxGetPr(recon_mx);
   for(unsigned int i=0; i<recon_dim[0]; i++){
     for(unsigned int j=0; j<recon_dim[1]; j++){
       for(unsigned int k=0; k<recon_dim[2]; k++){
@@ -104,8 +118,8 @@ void export_recon_data(Data_3d* recon, Data_3d* err, Data_3d* projs_final,
   mxDestroyArray(recon_mx);
 
   const size_t err_dim[3] = {(err->dim)[0],(err->dim)[1],(err->dim)[2]};
-  mxArray *err_mx = mxCreateNumericArray(3,err_dim,mxDOUBLE_CLASS,0);
-  double *err_mx_ptr = (double *)mxGetPr(err_mx);
+  mxArray *err_mx = mxCreateNumericArray(3,err_dim,mxSINGLE_CLASS,0);
+  float *err_mx_ptr = (float *)mxGetPr(err_mx);
   for(unsigned int i=0; i<err_dim[0]; i++){
     for(unsigned int j=0; j<err_dim[1]; j++){
       for(unsigned int k=0; k<err_dim[2]; k++){
@@ -117,8 +131,8 @@ void export_recon_data(Data_3d* recon, Data_3d* err, Data_3d* projs_final,
   mxDestroyArray(err_mx);
 
   const size_t projs_final_dim[3] = {(projs_final->dim)[0],(projs_final->dim)[1],(projs_final->dim)[2]};
-  mxArray *projs_final_mx = mxCreateNumericArray(3,projs_final_dim,mxDOUBLE_CLASS,0);
-  double *projs_final_mx_ptr = (double *)mxGetPr(projs_final_mx);
+  mxArray *projs_final_mx = mxCreateNumericArray(3,projs_final_dim,mxSINGLE_CLASS,0);
+  float *projs_final_mx_ptr = (float *)mxGetPr(projs_final_mx);
   for(unsigned int i=0; i<projs_final_dim[0]; i++){
     for(unsigned int j=0; j<projs_final_dim[1]; j++){
       for(unsigned int k=0; k<projs_final_dim[2]; k++){
@@ -138,20 +152,28 @@ int run_gdtomo_recon(const char* recon_data_fn){
   char* output_fn;
   Recon_param param;
 
+  printf("%s\n", "Importing Data");
   import_recon_data(recon_data_fn, &projs, &angles, &output_fn, &param);
-  printf("%s\n", "Data import complete");
 
   deg_to_rad(&angles);
 
   Data_3d recon;
   Data_3d err;
   Data_3d projs_final;
-  calc_reconstruction(&recon, &angles, &projs, &err, &projs_final, &param);
+
+  if(strcmp((const char*)param.mode,"single_tilt")==0){
+    calc_reconstruction_st(&recon, &angles, &projs, &err, &projs_final, &param);
+  }
+  else if(strcmp((const char*)param.mode,"multiple_tilt")==0){
+    calc_reconstruction_mt(&recon, &angles, &projs, &err, &projs_final, &param);
+  }
 
   export_recon_data(&recon, &err, &projs_final, &output_fn);
 
   printf("%s\n", "Data export complete");
 
+  free(output_fn);
+  free(param.mode);
   free_3d_data(&projs);
   free_2d_data(&angles);
   free_3d_data(&recon);

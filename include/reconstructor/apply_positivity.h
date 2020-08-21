@@ -8,4 +8,6 @@
  */
 void apply_positivity(Data_3d* recon);
 
+void apply_positivity_st(Data_2d* recon);
+
 #endif

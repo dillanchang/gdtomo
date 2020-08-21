@@ -1,17 +1,15 @@
 #include <reconstructor/reconstructor.h>
 
-#include <reconstructor/calc_projs_gpu/calc_projs_gpu.h>
-#include <reconstructor/calc_projs_cpu/calc_projs_cpu.h>
+#include <reconstructor/calc_projs_mt/calc_projs_mt.h>
 #include <reconstructor/calc_projs_diff.h>
 #include <reconstructor/calc_projs_err.h>
-#include <reconstructor/apply_projs_diff_gpu/apply_projs_diff_gpu.h>
-#include <reconstructor/apply_projs_diff_cpu/apply_projs_diff_cpu.h>
+#include <reconstructor/apply_projs_diff_mt/apply_projs_diff_mt.h>
 #include <reconstructor/apply_positivity.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
+void calc_reconstruction_mt(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
   err, Data_3d* projs_final, Recon_param* param){
 
   time_t start, end;
@@ -57,12 +55,12 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
   err_iter_dim[1] = 2;
   alloc_2d_data(&err_iter, err_iter_dim);
 
-  double err_r1, err_r2;
+  float err_r1, err_r2;
   for(unsigned int iter=0; iter<(param->n_iter); iter++){
-    calc_projs_gpu(&projs_curr, vol, angles);
+    calc_projs_mt(&projs_curr, vol, angles);
     calc_projs_diff(&projs_diff, projs, &projs_curr);
     calc_projs_err(&err_iter, &projs_diff, projs);
-    apply_projs_diff_gpu(vol, &projs_diff, angles, param->alpha);
+    apply_projs_diff_mt(vol, &projs_diff, angles, param->alpha);
     apply_positivity(vol);
     err_r1 = 0; err_r2 = 0;
     for(unsigned int proj=0; proj<(projs->dim)[0]; proj++){
@@ -78,7 +76,7 @@ void calc_reconstruction(Data_3d* vol, Data_2d* angles, Data_3d* projs, Data_3d*
     printf("%s%d%s%f%s%f%s%d%s\n", "Iteration ", iter+1, ":\tR1 Error: ",
       err_r1, ", R2 Error: ", err_r2, ", time elapsed: ", cpu_time_used, "s");
   }
-  calc_projs_gpu(&projs_curr, vol, angles);
+  calc_projs_mt(&projs_curr, vol, angles);
   calc_projs_diff(&projs_diff, projs, &projs_curr);
   calc_projs_err(&err_iter, &projs_diff, projs);
   err_r1 = 0; err_r2 = 0;

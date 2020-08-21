@@ -1,7 +1,7 @@
 extern "C"{
-  #include <reconstructor/calc_projs_gpu/calc_projs_gpu.h>
-  #include <reconstructor/calc_projs_gpu/apply_chunk_to_proj.h>
-  #include <reconstructor/calc_projs_gpu/get_chunk.h>
+  #include <reconstructor/calc_projs_mt/calc_projs_mt.h>
+  #include <reconstructor/calc_projs_mt/apply_chunk_to_proj.h>
+  #include <reconstructor/calc_projs_mt/get_chunk.h>
   
   #include <data/data_ops.h>
   #include <pthread.h>
@@ -11,44 +11,44 @@ extern "C"{
 }
 
 struct PC_Struct {
-  double*       proj_arr;
-  double*       r_hats;
+  float*       proj_arr;
+  float*       r_hats;
   Data_3d*      vol;
   int           device_idx;
   unsigned int  dim_chunk;
   unsigned int  n_proj;
   unsigned int  pdx;
   unsigned int  pdy;
-  double        lim_proj_z;
+  float        lim_proj_z;
 };
 
 void* exec_proj_job(void *void_data){
   PC_Struct *data = (PC_Struct *)void_data;
-  double*       proj_arr   = data->proj_arr  ;
-  double*       r_hats     = data->r_hats    ;
+  float*       proj_arr   = data->proj_arr  ;
+  float*       r_hats     = data->r_hats    ;
   Data_3d*      vol        = data->vol       ;
   int           device_idx = data->device_idx;
   unsigned int  dim_chunk  = data->dim_chunk ;
   unsigned int  n_proj     = data->n_proj    ;
   unsigned int  pdx        = data->pdx       ;
   unsigned int  pdy        = data->pdy       ;
-  double        lim_proj_z = data->lim_proj_z;
+  float        lim_proj_z = data->lim_proj_z;
 
   cudaSetDevice(device_idx);
-  double* chunk = (double*)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(double));
-  double* chunk_origin = (double*)malloc(3*sizeof(double));
-  double *dev_chunk, *dev_chunk_origin, *dev_projs, *dev_r_hats;
-  cudaMalloc( (void**)&dev_chunk, dim_chunk*dim_chunk*dim_chunk*sizeof(double) );
-  cudaMalloc( (void**)&dev_chunk_origin, 3*sizeof(double) );
-  cudaMalloc( (void**)&dev_projs, n_proj*pdx*pdy*sizeof(double) );
-  cudaMalloc( (void**)&dev_r_hats, n_proj*3*3*sizeof(double) );
+  float* chunk = (float*)malloc(dim_chunk*dim_chunk*dim_chunk*sizeof(float));
+  float* chunk_origin = (float*)malloc(3*sizeof(float));
+  float *dev_chunk, *dev_chunk_origin, *dev_projs, *dev_r_hats;
+  cudaMalloc( (void**)&dev_chunk, dim_chunk*dim_chunk*dim_chunk*sizeof(float) );
+  cudaMalloc( (void**)&dev_chunk_origin, 3*sizeof(float) );
+  cudaMalloc( (void**)&dev_projs, n_proj*pdx*pdy*sizeof(float) );
+  cudaMalloc( (void**)&dev_r_hats, n_proj*3*3*sizeof(float) );
   cudaMemcpy( dev_projs, 
               proj_arr,
-              n_proj*pdx*pdy*sizeof(double),
+              n_proj*pdx*pdy*sizeof(float),
               cudaMemcpyHostToDevice );
   cudaMemcpy( dev_r_hats, 
               r_hats,
-              n_proj*3*3*sizeof(double),
+              n_proj*3*3*sizeof(float),
               cudaMemcpyHostToDevice );
 
   unsigned int chunk_idx = 0;
@@ -56,11 +56,11 @@ void* exec_proj_job(void *void_data){
   while(!finished){
     cudaMemcpy( dev_chunk, 
                 chunk,
-                dim_chunk*dim_chunk*dim_chunk*sizeof(double),
+                dim_chunk*dim_chunk*dim_chunk*sizeof(float),
                 cudaMemcpyHostToDevice );
     cudaMemcpy( dev_chunk_origin, 
                 chunk_origin,
-                3*sizeof(double),
+                3*sizeof(float),
                 cudaMemcpyHostToDevice );
     apply_chunk_to_proj(dev_chunk, dim_chunk, dev_chunk_origin, dev_projs,
       dev_r_hats, n_proj, pdx, pdy, lim_proj_z);
@@ -70,7 +70,7 @@ void* exec_proj_job(void *void_data){
 
   cudaMemcpy( proj_arr, 
               dev_projs,
-              n_proj*pdx*pdy*sizeof(double),
+              n_proj*pdx*pdy*sizeof(float),
               cudaMemcpyDeviceToHost );
   cudaFree( dev_chunk        );
   cudaFree( dev_chunk_origin );
@@ -82,7 +82,7 @@ void* exec_proj_job(void *void_data){
   return 0;
 }
 
-void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
+void calc_projs_mt(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   
   // Get device count
   int n_devices;
@@ -92,7 +92,7 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   size_t total_mem;
   cudaSetDevice(0);
   cudaMemGetInfo(NULL, &total_mem);
-  unsigned int dim_chunk = (unsigned int)pow(1.0*(total_mem*0.25)/sizeof(double),1./3.);
+  unsigned int dim_chunk = (unsigned int)pow(1.0*(total_mem*0.25)/sizeof(float),1./3.);
   if(dim_chunk > (vol->dim)[0]+4) dim_chunk = (vol->dim)[0]+4;
   if(dim_chunk > (vol->dim)[1]+4) dim_chunk = (vol->dim)[1]+4;
   if(dim_chunk > (vol->dim)[2]+4) dim_chunk = (vol->dim)[2]+4;
@@ -102,7 +102,7 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   unsigned int pdx = (projs->dim)[1];
   unsigned int pdy = (projs->dim)[2];
   unsigned int n_jobs = 
-    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(double)/(total_mem*0.25));
+    (unsigned int)ceil(1.*n_projs_tot*pdx*pdy*sizeof(float)/(total_mem*0.25));
   if(n_jobs < n_devices){
     n_devices = n_jobs;
   }
@@ -121,13 +121,13 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
   }
 
   // Calculate r_hats
-  double x_hat_i[3] = {1,0,0};
-  double y_hat_i[3] = {0,1,0};
-  double z_hat_i[3] = {0,0,1};
-  double** r_hats = (double **)malloc(n_jobs*sizeof(double *));
-  double v[3];
+  float x_hat_i[3] = {1,0,0};
+  float y_hat_i[3] = {0,1,0};
+  float z_hat_i[3] = {0,0,1};
+  float** r_hats = (float **)malloc(n_jobs*sizeof(float *));
+  float v[3];
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
-    r_hats[job_idx] = (double *)malloc(n_projs[job_idx]*3*3*sizeof(double));
+    r_hats[job_idx] = (float *)malloc(n_projs[job_idx]*3*3*sizeof(float));
     unsigned int proj_idx;
     for(unsigned int i = 0; i < n_projs[job_idx]; i++){
       proj_idx = proj_idx_low[job_idx] + i;
@@ -145,18 +145,18 @@ void calc_projs_gpu(Data_3d* projs, Data_3d* vol, Data_2d* angles){
       r_hats[job_idx][i*9+2*3+2] = v[2];
     }
   }
-  double x_min  = 1.0*(vol->dim)[0]/2;
-  double y_min  = 1.0*(vol->dim)[1]/2;
-  double z_min  = 1.0*(vol->dim)[2]/2;
+  float x_min  = 1.0*(vol->dim)[0]/2;
+  float y_min  = 1.0*(vol->dim)[1]/2;
+  float z_min  = 1.0*(vol->dim)[2]/2;
   unsigned int lim_proj_z =
-    (unsigned int) ceil(sqrt( (double)x_min*x_min
-                            + (double)y_min*y_min
-                            + (double)z_min*z_min ));
+    (unsigned int) ceil(sqrt( (float)x_min*x_min
+                            + (float)y_min*y_min
+                            + (float)z_min*z_min ));
 
   // Allocate proj_arrs
-  double** proj_arrs = (double **)malloc(n_jobs*sizeof(double *));
+  float** proj_arrs = (float **)malloc(n_jobs*sizeof(float *));
   for(unsigned int job_idx = 0; job_idx < n_jobs; job_idx++){
-    proj_arrs[job_idx] = (double *)malloc(n_projs[job_idx]*pdy*pdx*sizeof(double));
+    proj_arrs[job_idx] = (float *)malloc(n_projs[job_idx]*pdy*pdx*sizeof(float));
     for(unsigned int idx=0; idx<n_projs[job_idx]*pdy*pdx; idx++){
       proj_arrs[job_idx][idx] = 0.;
     }

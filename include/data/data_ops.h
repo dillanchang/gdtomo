@@ -8,13 +8,13 @@
 Calculates the euler rotation of [v] with euler [angles], in theta, phi, psi for
 Z-Y-X rotation, and saves it as [v_f]
 */
-void euler_rot(double* v, double* angles, double* v_f);
+void euler_rot(float* v, float* angles, float* v_f);
 
 /*
 Calculates the reverse euler rotation of [v] with euler [angles], in theta, phi,
 psi for Z-Y-X rotation, and saves it as [v_f]
 */
-void euler_rot_rev(double* v, double* angles, double* v_f);
+void euler_rot_rev(float* v, float* angles, float* v_f);
 
 /* Converts from degrees to radians */
 void deg_to_rad(Data_2d* angles);

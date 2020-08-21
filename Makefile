@@ -1,6 +1,6 @@
 CC          := -gcc
 NVCC        := nvcc
-CFLAGS      := -pedantic-errors -Wall -Wextra -Werror
+CFLAGS      := -O2 -pedantic-errors -Wall -Wextra -Werror
 LDFLAGS     := -L/usr/lib -lstdc++ -lm -lpthread -L/usr/local/cuda/lib64 -lcudart -L/usr/local/MATLAB/R2017b/bin/glnxa64 -lmat -lmx
 OBJ_DIR     := ./build
 TARGET      := ./gdtomo

@@ -3,12 +3,12 @@
 
 typedef struct Data_2d{
   unsigned int* dim;
-  double** data;
+  float** data;
 } Data_2d;
 
 typedef struct Data_3d{
   unsigned int* dim;
-  double*** data;
+  float*** data;
 } Data_3d;
 
 /*

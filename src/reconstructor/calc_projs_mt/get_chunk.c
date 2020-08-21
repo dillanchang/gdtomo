@@ -1,7 +1,7 @@
-#include <reconstructor/calc_projs_gpu/get_chunk.h>
+#include <reconstructor/calc_projs_mt/get_chunk.h>
 
-double chunk_val(int x, int y, int z, unsigned int x_lim,
-  unsigned int y_lim, unsigned int z_lim, double*** vol){
+float chunk_val(int x, int y, int z, unsigned int x_lim,
+  unsigned int y_lim, unsigned int z_lim, float*** vol){
   unsigned int x_idx, y_idx, z_idx;
   if(x<0 || x>(int)x_lim-1){
     return 0.;
@@ -21,8 +21,8 @@ double chunk_val(int x, int y, int z, unsigned int x_lim,
   return vol[x_idx][y_idx][z_idx];
 }
 
-int get_chunk(Data_3d* vol, unsigned int chunk_idx, double* chunk,
-  unsigned int dim_chunk, double* chunk_origin){
+int get_chunk(Data_3d* vol, unsigned int chunk_idx, float* chunk,
+  unsigned int dim_chunk, float* chunk_origin){
 
   int curr_x = -2, curr_y = -2, curr_z = -2;
   unsigned int dim_x = (vol->dim)[0], dim_y = (vol->dim)[1], dim_z = (vol->dim)[2];
@@ -61,9 +61,9 @@ int get_chunk(Data_3d* vol, unsigned int chunk_idx, double* chunk,
   int x_min = -1*(int)((vol->dim)[0]/2);
   int y_min = -1*(int)((vol->dim)[1]/2);
   int z_min = -1*(int)((vol->dim)[2]/2);
-  chunk_origin[0] = (double)(x_min+curr_x);
-  chunk_origin[1] = (double)(y_min+curr_y);
-  chunk_origin[2] = (double)(z_min+curr_z);
+  chunk_origin[0] = (float)(x_min+curr_x);
+  chunk_origin[1] = (float)(y_min+curr_y);
+  chunk_origin[2] = (float)(z_min+curr_z);
 
   for(int z = 0; z < (int)dim_chunk; z++){
     for(int y = 0; y < (int)dim_chunk; y++){

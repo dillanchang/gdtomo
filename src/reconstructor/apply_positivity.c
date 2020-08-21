@@ -11,3 +11,13 @@ void apply_positivity(Data_3d* recon){
     }
   }
 }
+
+void apply_positivity_st(Data_2d* recon){
+  for(unsigned int i=0; i<(recon->dim)[0]; i++){
+    for(unsigned int j=0; j<(recon->dim)[1]; j++){
+      if((recon->data)[i][j] < 0.){
+        (recon->data)[i][j] = 0.;
+      }
+    }
+  }
+}

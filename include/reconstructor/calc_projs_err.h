@@ -9,4 +9,6 @@
  */
 void calc_projs_err(Data_2d* err, Data_3d* projs_diff, Data_3d* projs);
 
+void calc_projs_err_st(Data_2d* err, Data_3d* projs_diff, Data_3d* projs);
+
 #endif

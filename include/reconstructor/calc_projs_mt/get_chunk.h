@@ -7,7 +7,7 @@
  * Returns the correct [chunk] given the queried [chunk_idx]. If [chunk_idx] is
  * out of bounds, the method returns 1. Else, returns 0.
  */
-int get_chunk(Data_3d* vol, unsigned int chunk_idx, double* chunk,
-  unsigned int dim_chunk, double* chunk_origin);
+int get_chunk(Data_3d* vol, unsigned int chunk_idx, float* chunk,
+  unsigned int dim_chunk, float* chunk_origin);
 
 #endif

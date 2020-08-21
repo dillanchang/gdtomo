@@ -9,4 +9,6 @@
  */
 void calc_projs_diff(Data_3d* projs_diff, Data_3d* projs, Data_3d* projs_curr);
 
+void calc_projs_diff_st(Data_3d* projs_diff, Data_3d* projs, Data_3d* projs_curr);
+
 #endif
